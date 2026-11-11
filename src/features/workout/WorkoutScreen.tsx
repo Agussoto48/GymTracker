@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useExercises } from '../../data/exercises.ts'
+import { useRoutines } from '../../data/routines.ts'
 import { startSession, useActiveSession } from '../../data/sessions.ts'
 import { formatTime, minutesBetween } from '../../shared/lib/format.ts'
 import { useNow } from '../../shared/lib/useNow.ts'
@@ -25,10 +26,14 @@ export function WorkoutScreen() {
   const now = useNow()
   const session = useActiveSession()
   const exercises = useExercises()
+  const routines = useRoutines()
   const [open, setOpen] = useState(false)
+  const activeRoutines = routines?.filter((r) => r.archivedAt === null) ?? []
+  const sessionRoutine = session?.routineId ? routines?.find((r) => r.id === session.routineId) : undefined
+  const sessionName = sessionRoutine?.name ?? (session?.routineId ? 'Rutina' : 'Entrenamiento libre')
 
-  async function start() {
-    await startSession()
+  async function start(routineId: string | null = null) {
+    await startSession(routineId)
     setOpen(true)
   }
 
@@ -40,7 +45,7 @@ export function WorkoutScreen() {
         <Section title="En curso">
           <div className={styles.active}>
             <p className="figures">
-              Entrenamiento libre · iniciado {formatTime(session.startedAt)} ·{' '}
+              {sessionName} · iniciado {formatTime(session.startedAt)} ·{' '}
               {minutesBetween(session.startedAt, now)} min
             </p>
             <Button variant="primary" onClick={() => setOpen(true)}>
@@ -60,14 +65,44 @@ export function WorkoutScreen() {
       )}
 
       <Section title="Tus rutinas">
-        <EmptyState
-          title="Todavía no hay rutinas"
-          message="Pronto podrás armar tus días (Push, Pierna…) y empezar un entrenamiento desde una rutina con un toque."
-        />
+        {activeRoutines.length === 0 ? (
+          <EmptyState
+            title="Todavía no hay rutinas"
+            message="Arma tus días (Push, Pierna…) en la pestaña Rutinas y empieza desde aquí con un toque."
+          />
+        ) : (
+          <ul className={styles.routines}>
+            {activeRoutines.map((routine) => (
+              <li key={routine.id} className={styles.routine}>
+                <span className={styles.routineText}>
+                  <span className={styles.routineName}>{routine.name}</span>
+                  <span className={styles.routineMeta}>
+                    {routine.exerciseIds.length} {routine.exerciseIds.length === 1 ? 'ejercicio' : 'ejercicios'}
+                  </span>
+                </span>
+                <Button
+                  disabled={Boolean(session)}
+                  onClick={() => void start(routine.id)}
+                  aria-label={`Empezar ${routine.name}`}
+                >
+                  Empezar
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {session && activeRoutines.length > 0 && (
+          <p className={styles.note}>Termina o descarta el entrenamiento en curso para empezar otro.</p>
+        )}
       </Section>
 
       {open && session && exercises && (
-        <WorkoutSheet session={session} exercises={exercises} onHide={() => setOpen(false)} />
+        <WorkoutSheet
+          session={session}
+          exercises={exercises}
+          routineName={session.routineId ? sessionName : null}
+          onHide={() => setOpen(false)}
+        />
       )}
     </>
   )
