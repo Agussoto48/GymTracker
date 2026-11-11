@@ -1,0 +1,51 @@
+.form {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.save {
+  min-height: var(--tap);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.save:disabled {
+  background: var(--surface-2);
+  color: var(--label-3);
+}
+
+.formError {
+  color: var(--danger);
+  font-size: var(--text-subhead);
+}
+
+.manage {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-8);
+}
+
+.manageButton {
+  min-height: var(--tap);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--accent-text);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.danger {
+  color: var(--danger);
+}
+
+.manageHint {
+  padding: 0 var(--space-1);
+  color: var(--label-2);
+  font-size: var(--text-footnote);
+}

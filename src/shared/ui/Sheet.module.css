@@ -1,0 +1,62 @@
+/* Anchored near the top so the iOS keyboard never covers the header actions. */
+.sheet {
+  /* Elevated surfaces: in dark mode a sheet is lighter than the screen behind it (HIG dark mode). */
+  --bg: light-dark(#f2f2f5, #1c1c1e);
+  --surface: light-dark(#ffffff, #2c2c2e);
+  --surface-2: light-dark(#e9e9ee, #363638);
+  position: fixed;
+  inset: auto 0 0;
+  width: 100%;
+  max-width: 640px;
+  height: calc(100dvh - max(var(--space-6), env(safe-area-inset-top) + var(--space-2)));
+  max-height: none;
+  margin: 0 auto;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  background: var(--bg);
+  color: var(--label);
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet::backdrop {
+  background: rgb(0 0 0 / 0.4);
+}
+
+.header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-2);
+  border-bottom: 1px solid var(--separator);
+}
+
+.title {
+  font-size: var(--text-headline);
+  font-weight: 600;
+  text-align: center;
+}
+
+.cancel {
+  justify-self: start;
+  min-height: var(--tap);
+  padding: 0 var(--space-2);
+  border: 0;
+  background: none;
+  color: var(--accent-text);
+  cursor: pointer;
+}
+
+.action {
+  justify-self: end;
+  padding-right: var(--space-2);
+}
+
+.body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-6) var(--space-4) max(var(--space-8), env(safe-area-inset-bottom));
+}
