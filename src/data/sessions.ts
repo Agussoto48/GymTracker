@@ -29,17 +29,25 @@ export async function getActiveSession(): Promise<WorkoutSession | undefined> {
     .first()
 }
 
+/** Starts a free workout, or one prefilled with a routine's exercises (archived ones are skipped). */
 export async function startSession(routineId: Id | null = null): Promise<WorkoutSession> {
-  return db.transaction('rw', db.sessions, async () => {
+  return db.transaction('rw', db.sessions, db.routines, db.exercises, async () => {
     if (await getActiveSession()) throw new ActiveSessionExistsError()
-    const session: WorkoutSession = {
+    let exerciseIds: Id[] = []
+    if (routineId) {
+      const routine = await db.routines.get(routineId)
+      if (!routine) throw new NotFoundError('Routine', routineId)
+      const exercises = await db.exercises.bulkGet(routine.exerciseIds)
+      exerciseIds = exercises.filter((e) => e && e.archivedAt === null).map((e) => e!.id)
+    }
+    const session = withDerivedExerciseIds({
       id: createId(),
       routineId,
       startedAt: now(),
       finishedAt: null,
-      exercises: [],
+      exercises: exerciseIds.map((exerciseId) => ({ exerciseId, notes: '', sets: [] })),
       exerciseIds: [],
-    }
+    })
     await db.sessions.add(session)
     return session
   })
