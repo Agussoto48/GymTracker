@@ -7,6 +7,7 @@
   --surface: light-dark(#ffffff, #1c1c1e);
   --surface-2: light-dark(#e9e9ee, #2c2c2e);
   --separator: light-dark(#d4d4da, #3a3a3e);
+  --thumb: light-dark(#ffffff, #636366); /* selected segment: lighter than its track in both modes */
 
   /* Content. Contrast on --surface: 18.0 / 6.4 / 3.7 (light), 15.5 / 6.7 / 4.1 (dark) */
   --label: light-dark(#16161a, #f4f4f6);
@@ -66,6 +67,11 @@ body {
   color: var(--label);
   font-family: var(--font-sans);
   line-height: 1.4;
+}
+
+/* Keep the page behind an open sheet from scrolling. */
+html:has(dialog[open]) {
+  overflow: hidden;
 }
 
 h1,

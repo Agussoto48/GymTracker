@@ -1,0 +1,49 @@
+.field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.label {
+  padding: 0 var(--space-1);
+  font-size: var(--text-subhead);
+  font-weight: 600;
+}
+
+/* At least 16 px so Safari iOS does not zoom in on focus. */
+.input {
+  width: 100%;
+  min-height: var(--tap);
+  padding: var(--space-3);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--label);
+  font: inherit;
+  font-size: max(16px, var(--text-body));
+}
+
+textarea.input {
+  resize: vertical;
+}
+
+.input::placeholder {
+  color: var(--label-2);
+}
+
+.input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.hint,
+.error {
+  padding: 0 var(--space-1);
+  font-size: var(--text-footnote);
+}
+
+.hint {
+  color: var(--label-2);
+}
+
+.error {
+  color: var(--danger);
+}
