@@ -21,6 +21,7 @@
 
   /* Signals */
   --danger: light-dark(#c42b1c, #ff6b5e);
+  --on-danger: light-dark(#ffffff, #2a0602); /* 5.7:1 and 6.7:1 on --danger */
 
   /* Type scale in rem over a 17 pt body (scales with Dynamic Type on iOS) */
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
