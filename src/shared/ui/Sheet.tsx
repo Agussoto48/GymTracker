@@ -3,6 +3,8 @@ import styles from './Sheet.module.css'
 
 type SheetProps = {
   title: string
+  /** Label of the leading button that closes the sheet. */
+  closeLabel?: string
   /** Called on Cancel or Escape. Backdrop taps are ignored to avoid losing edits. */
   onClose: () => void
   /** Trailing header action, usually the submit button of a form. */
@@ -10,7 +12,7 @@ type SheetProps = {
   children: ReactNode
 }
 
-export function Sheet({ title, onClose, action, children }: SheetProps) {
+export function Sheet({ title, closeLabel = 'Cancelar', onClose, action, children }: SheetProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const titleId = useId()
 
@@ -33,7 +35,7 @@ export function Sheet({ title, onClose, action, children }: SheetProps) {
     >
       <header className={styles.header}>
         <button type="button" className={styles.cancel} onClick={onClose}>
-          Cancelar
+          {closeLabel}
         </button>
         <h2 id={titleId} className={styles.title}>
           {title}

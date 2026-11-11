@@ -3,34 +3,18 @@ import {
   compareByName,
   isDuplicateName,
   validateExercise,
-  type ExerciseErrors,
   type ExerciseInput,
 } from '../domain/exercise.ts'
 import type { Exercise, Id } from '../domain/types.ts'
 import { db } from './db.ts'
+import { NotFoundError, ValidationError } from './errors.ts'
 import { createId } from './ids.ts'
-
-/** Thrown when input breaks a rule; `errors` maps fields to messages for the form. */
-export class ExerciseValidationError extends Error {
-  readonly errors: ExerciseErrors
-
-  constructor(errors: ExerciseErrors) {
-    super('Invalid exercise')
-    this.errors = errors
-  }
-}
-
-export class ExerciseNotFoundError extends Error {
-  constructor(id: Id) {
-    super(`Exercise not found: ${id}`)
-  }
-}
 
 const now = () => new Date().toISOString()
 
 function validOrThrow(input: ExerciseInput) {
   const result = validateExercise(input)
-  if (!result.ok) throw new ExerciseValidationError(result.errors)
+  if (!result.ok) throw new ValidationError(result.errors)
   return result.value
 }
 
@@ -38,7 +22,7 @@ export async function createExercise(input: ExerciseInput): Promise<Exercise> {
   const fields = validOrThrow(input)
   return db.transaction('rw', db.exercises, async () => {
     if (isDuplicateName(fields.name, await db.exercises.toArray())) {
-      throw new ExerciseValidationError({ name: 'Ya existe un ejercicio con ese nombre.' })
+      throw new ValidationError({ name: 'Ya existe un ejercicio con ese nombre.' })
     }
     const timestamp = now()
     const exercise: Exercise = {
@@ -57,13 +41,13 @@ export async function updateExercise(id: Id, input: ExerciseInput): Promise<Exer
   const fields = validOrThrow(input)
   return db.transaction('rw', db.exercises, db.sessions, async () => {
     const current = await db.exercises.get(id)
-    if (!current) throw new ExerciseNotFoundError(id)
+    if (!current) throw new NotFoundError('Exercise', id)
     if (isDuplicateName(fields.name, await db.exercises.toArray(), id)) {
-      throw new ExerciseValidationError({ name: 'Ya existe un ejercicio con ese nombre.' })
+      throw new ValidationError({ name: 'Ya existe un ejercicio con ese nombre.' })
     }
     // Changing the kind would change the meaning of logged sets.
     if (fields.kind !== current.kind && (await countSessionsWith(id)) > 0) {
-      throw new ExerciseValidationError({ kind: 'No se puede cambiar: ya tiene historial.' })
+      throw new ValidationError({ kind: 'No se puede cambiar: ya tiene historial.' })
     }
     const updated: Exercise = { ...current, ...fields, updatedAt: now() }
     await db.exercises.put(updated)
@@ -77,7 +61,7 @@ export async function setExerciseArchived(id: Id, archived: boolean): Promise<vo
     archivedAt: archived ? timestamp : null,
     updatedAt: timestamp,
   })
-  if (changed === 0) throw new ExerciseNotFoundError(id)
+  if (changed === 0) throw new NotFoundError('Exercise', id)
 }
 
 /** Permanent delete is only allowed when no routine or session references the exercise. */

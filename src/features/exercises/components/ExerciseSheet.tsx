@@ -5,8 +5,8 @@ import {
   type ExerciseErrors,
 } from '../../../domain/exercise.ts'
 import type { Exercise, ExerciseKind, WeightUnit } from '../../../domain/types.ts'
+import { ValidationError } from '../../../data/errors.ts'
 import {
-  ExerciseValidationError,
   createExercise,
   deleteExercise,
   setExerciseArchived,
@@ -52,7 +52,7 @@ export function ExerciseSheet({ exercise, onClose }: ExerciseSheetProps) {
       await action()
       onClose()
     } catch (error) {
-      if (error instanceof ExerciseValidationError) setErrors(error.errors)
+      if (error instanceof ValidationError) setErrors(error.errors)
       else setFormError('No se pudo guardar. Intenta de nuevo.')
     } finally {
       setSaving(false)
@@ -99,7 +99,11 @@ export function ExerciseSheet({ exercise, onClose }: ExerciseSheetProps) {
           options={KIND_OPTIONS}
           onChange={setKind}
           error={errors.kind}
-          hint={kind === 'bodyweight' ? 'El peso que anotes será lastre añadido (opcional).' : undefined}
+          hint={
+            kind === 'bodyweight'
+              ? 'En cada serie podrás anotar lastre (opcional). Verás siempre el más reciente.'
+              : 'El peso se anota en cada serie al entrenar. Verás siempre el más reciente, en todas tus rutinas.'
+          }
         />
         <SegmentedControl
           label="Unidad por defecto"

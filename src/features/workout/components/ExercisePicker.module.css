@@ -1,0 +1,50 @@
+.content {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.empty {
+  color: var(--label-2);
+  text-align: center;
+  padding: var(--space-6) 0;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.list li + li .row {
+  border-top: 1px solid var(--separator);
+}
+
+.row {
+  display: grid;
+  width: 100%;
+  min-height: 52px;
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  background: none;
+  text-align: start;
+  cursor: pointer;
+}
+
+.row:active {
+  background: var(--surface-2);
+}
+
+.name {
+  font-weight: 600;
+}
+
+.meta {
+  color: var(--label-2);
+  font-size: var(--text-footnote);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,0 +1,150 @@
+.entry {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--surface-2);
+}
+
+.title {
+  font-weight: 700;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.field {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.fieldHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+  min-height: 32px;
+  color: var(--label-2);
+  font-size: var(--text-footnote);
+  font-weight: 600;
+}
+
+.unit {
+  min-width: var(--tap);
+  min-height: 32px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--separator);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--accent-text);
+  font-size: var(--text-footnote);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Big figures; the placeholder is the "last time" ghost (large text, so --label-3 is allowed). */
+.number {
+  width: 100%;
+  min-height: 60px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--label);
+  font: inherit;
+  font-size: var(--text-figure);
+  font-weight: 600;
+  text-align: center;
+}
+
+.number::placeholder {
+  color: var(--label-3);
+}
+
+.number[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.steppers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.steppers button {
+  min-height: var(--tap);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--label);
+  font-size: 1.4rem;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.rpe {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.rpeLabel {
+  color: var(--label-2);
+  font-size: var(--text-footnote);
+  font-weight: 600;
+}
+
+.rpeOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.chip {
+  flex: 0 0 auto;
+  min-width: var(--tap);
+  min-height: var(--tap);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--separator);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--label);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+/* Selected chip: inverted colors plus bold border, not color alone. */
+.chip[aria-pressed='true'] {
+  border: 2px solid var(--label);
+  background: var(--label);
+  color: var(--surface);
+}
+
+.error {
+  color: var(--danger);
+  font-size: var(--text-subhead);
+}
+
+.submit {
+  min-height: 56px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: var(--text-body);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.submit:disabled {
+  background: var(--surface);
+  color: var(--label-3);
+  cursor: not-allowed;
+}
