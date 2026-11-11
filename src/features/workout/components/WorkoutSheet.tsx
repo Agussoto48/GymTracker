@@ -3,23 +3,27 @@ import type { Exercise, WorkoutSession } from '../../../domain/types.ts'
 import { addExerciseToSession, discardSession, finishSession } from '../../../data/sessions.ts'
 import { formatTime, minutesBetween } from '../../../shared/lib/format.ts'
 import { useNow } from '../../../shared/lib/useNow.ts'
+import { ExercisePicker } from '../../../shared/ui/ExercisePicker.tsx'
 import { Sheet } from '../../../shared/ui/Sheet.tsx'
 import { ExerciseCard } from './ExerciseCard.tsx'
-import { ExercisePicker } from './ExercisePicker.tsx'
 import styles from './WorkoutSheet.module.css'
 
 type WorkoutSheetProps = {
   session: WorkoutSession
   exercises: readonly Exercise[]
+  /** Routine name, or null for a free workout. */
+  routineName: string | null
   /** Hides the workout without finishing it; it can be resumed from the Entrenar tab. */
   onHide: () => void
 }
 
-export function WorkoutSheet({ session, exercises, onHide }: WorkoutSheetProps) {
+export function WorkoutSheet({ session, exercises, routineName, onHide }: WorkoutSheetProps) {
   const now = useNow()
   const [picking, setPicking] = useState(false)
-  // The open card; defaults to the last exercise added.
-  const [expandedId, setExpandedId] = useState<string | null>(session.exercises.at(-1)?.exerciseId ?? null)
+  // The open card: first exercise without sets (routine order), else the last one.
+  const [expandedId, setExpandedId] = useState<string | null>(
+    (session.exercises.find((e) => e.sets.length === 0) ?? session.exercises.at(-1))?.exerciseId ?? null,
+  )
   const byId = new Map(exercises.map((e) => [e.id, e]))
   const totalSets = session.exercises.reduce((sum, e) => sum + e.sets.length, 0)
 
@@ -39,7 +43,7 @@ export function WorkoutSheet({ session, exercises, onHide }: WorkoutSheetProps) 
 
   return (
     <Sheet
-      title="Entrenamiento"
+      title={routineName ?? 'Entrenamiento'}
       closeLabel="Ocultar"
       onClose={onHide}
       action={

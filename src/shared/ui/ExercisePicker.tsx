@@ -1,31 +1,33 @@
 import { useState } from 'react'
-import { nameKey } from '../../../domain/exercise.ts'
-import type { Exercise, Id } from '../../../domain/types.ts'
-import { Sheet } from '../../../shared/ui/Sheet.tsx'
-import { TextField } from '../../../shared/ui/TextField.tsx'
+import { nameKey } from '../../domain/names.ts'
+import type { Exercise, Id } from '../../domain/types.ts'
+import { Sheet } from './Sheet.tsx'
+import { TextField } from './TextField.tsx'
 import styles from './ExercisePicker.module.css'
 
 type ExercisePickerProps = {
   exercises: readonly Exercise[]
-  /** Exercises already in the workout are hidden. */
+  /** Exercises already chosen are hidden. */
   excludeIds: readonly Id[]
+  /** Defaults to "Cancelar"; use "Listo" when the picker stays open to add several. */
+  closeLabel?: string
   onPick: (exercise: Exercise) => void
   onClose: () => void
 }
 
-export function ExercisePicker({ exercises, excludeIds, onPick, onClose }: ExercisePickerProps) {
+export function ExercisePicker({ exercises, excludeIds, closeLabel, onPick, onClose }: ExercisePickerProps) {
   const [query, setQuery] = useState('')
   const available = exercises.filter((e) => e.archivedAt === null && !excludeIds.includes(e.id))
   const key = nameKey(query)
   const matches = key ? available.filter((e) => nameKey(e.name).includes(key)) : available
 
   return (
-    <Sheet title="Agregar ejercicio" onClose={onClose}>
+    <Sheet title="Agregar ejercicio" closeLabel={closeLabel} onClose={onClose}>
       {available.length === 0 ? (
         <p className={styles.empty}>
           {exercises.length === 0
             ? 'Tu catálogo está vacío. Crea ejercicios en la pestaña Ejercicios.'
-            : 'Ya agregaste todos los ejercicios de tu catálogo.'}
+            : 'Ya agregaste todos los ejercicios disponibles.'}
         </p>
       ) : (
         <div className={styles.content}>

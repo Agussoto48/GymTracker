@@ -11,3 +11,40 @@
   border-radius: var(--radius-card);
   background: var(--surface);
 }
+
+.routines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.routine {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 60px;
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+}
+
+.routine + .routine {
+  border-top: 1px solid var(--separator);
+}
+
+.routineText {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.routineName {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.routineMeta {
+  color: var(--label-2);
+  font-size: var(--text-footnote);
+}
