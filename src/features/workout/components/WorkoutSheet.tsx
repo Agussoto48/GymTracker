@@ -1,0 +1,99 @@
+import { useState } from 'react'
+import type { Exercise, WorkoutSession } from '../../../domain/types.ts'
+import { addExerciseToSession, discardSession, finishSession } from '../../../data/sessions.ts'
+import { formatTime, minutesBetween } from '../../../shared/lib/format.ts'
+import { useNow } from '../../../shared/lib/useNow.ts'
+import { Sheet } from '../../../shared/ui/Sheet.tsx'
+import { ExerciseCard } from './ExerciseCard.tsx'
+import { ExercisePicker } from './ExercisePicker.tsx'
+import styles from './WorkoutSheet.module.css'
+
+type WorkoutSheetProps = {
+  session: WorkoutSession
+  exercises: readonly Exercise[]
+  /** Hides the workout without finishing it; it can be resumed from the Entrenar tab. */
+  onHide: () => void
+}
+
+export function WorkoutSheet({ session, exercises, onHide }: WorkoutSheetProps) {
+  const now = useNow()
+  const [picking, setPicking] = useState(false)
+  // The open card; defaults to the last exercise added.
+  const [expandedId, setExpandedId] = useState<string | null>(session.exercises.at(-1)?.exerciseId ?? null)
+  const byId = new Map(exercises.map((e) => [e.id, e]))
+  const totalSets = session.exercises.reduce((sum, e) => sum + e.sets.length, 0)
+
+  async function finish() {
+    if (totalSets === 0) {
+      if (window.confirm('No registraste ninguna serie. ¿Descartar este entrenamiento?')) await discardSession(session.id)
+      return
+    }
+    if (window.confirm(`¿Terminar el entrenamiento? (${totalSets} ${totalSets === 1 ? 'serie' : 'series'})`)) {
+      await finishSession(session.id)
+    }
+  }
+
+  async function discard() {
+    if (window.confirm('¿Descartar este entrenamiento? Se borrarán todas sus series.')) await discardSession(session.id)
+  }
+
+  return (
+    <Sheet
+      title="Entrenamiento"
+      closeLabel="Ocultar"
+      onClose={onHide}
+      action={
+        <button type="button" className={styles.finish} onClick={() => void finish()}>
+          Terminar
+        </button>
+      }
+    >
+      <p className={`${styles.status} figures`}>
+        Iniciado {formatTime(session.startedAt)} · {minutesBetween(session.startedAt, now)} min · {totalSets}{' '}
+        {totalSets === 1 ? 'serie' : 'series'}
+      </p>
+
+      <div className={styles.exercises}>
+        {session.exercises.map((entry) => {
+          const exercise = byId.get(entry.exerciseId)
+          if (!exercise) return null
+          return (
+            <ExerciseCard
+              key={entry.exerciseId}
+              sessionId={session.id}
+              entry={entry}
+              exercise={exercise}
+              expanded={expandedId === entry.exerciseId}
+              onExpand={() => setExpandedId(entry.exerciseId)}
+            />
+          )
+        })}
+      </div>
+
+      {session.exercises.length === 0 && (
+        <p className={styles.hint}>Agrega el primer ejercicio para empezar a anotar series.</p>
+      )}
+
+      <button type="button" className={styles.add} onClick={() => setPicking(true)}>
+        + Agregar ejercicio
+      </button>
+
+      <button type="button" className={styles.discard} onClick={() => void discard()}>
+        Descartar entrenamiento
+      </button>
+
+      {picking && (
+        <ExercisePicker
+          exercises={exercises}
+          excludeIds={session.exerciseIds}
+          onClose={() => setPicking(false)}
+          onPick={async (exercise) => {
+            await addExerciseToSession(session.id, exercise.id)
+            setExpandedId(exercise.id)
+            setPicking(false)
+          }}
+        />
+      )}
+    </Sheet>
+  )
+}

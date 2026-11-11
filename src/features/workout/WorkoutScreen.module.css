@@ -3,3 +3,11 @@
   font-size: var(--text-footnote);
   text-align: center;
 }
+
+.active {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}

@@ -1,0 +1,51 @@
+/* Plain, not amber: logging a set is the primary action while training. */
+.finish {
+  min-height: var(--tap);
+  padding: 0 var(--space-2);
+  border: 0;
+  background: none;
+  color: var(--accent-text);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.status {
+  margin-top: calc(-1 * var(--space-2));
+  margin-bottom: var(--space-4);
+  color: var(--label-2);
+  font-size: var(--text-footnote);
+}
+
+.exercises {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.hint {
+  color: var(--label-2);
+  text-align: center;
+  padding: var(--space-6) 0 var(--space-2);
+}
+
+.add {
+  width: 100%;
+  min-height: 52px;
+  margin-top: var(--space-4);
+  border: 1px dashed var(--separator);
+  border-radius: var(--radius-card);
+  background: none;
+  color: var(--accent-text);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.discard {
+  display: block;
+  min-height: var(--tap);
+  margin: var(--space-8) auto 0;
+  border: 0;
+  background: none;
+  color: var(--danger);
+  font-size: var(--text-subhead);
+  cursor: pointer;
+}
