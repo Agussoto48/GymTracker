@@ -1,0 +1,78 @@
+.card {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.text {
+  font-size: var(--text-subhead);
+  text-wrap: pretty;
+}
+
+.meta {
+  color: var(--label-2);
+  font-size: var(--text-footnote);
+}
+
+/* Warnings use text plus color, never color alone. */
+.warning {
+  color: var(--danger);
+  font-size: var(--text-footnote);
+  font-weight: 600;
+}
+
+.actions {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.primary,
+.secondary,
+.danger {
+  min-height: var(--tap);
+  border: 0;
+  border-radius: var(--radius-control);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary {
+  min-height: 52px;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.primary:disabled {
+  background: var(--surface-2);
+  color: var(--label-3);
+  cursor: not-allowed;
+}
+
+.secondary {
+  background: var(--surface-2);
+  color: var(--accent-text);
+}
+
+.danger {
+  min-height: 52px;
+  background: var(--danger);
+  color: var(--on-danger);
+}
+
+.danger:disabled {
+  opacity: 0.6;
+}
+
+.confirm {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.errors {
+  margin: var(--space-3) 0 0;
+  padding-left: var(--space-6);
+  color: var(--danger);
+  font-size: var(--text-subhead);
+}
