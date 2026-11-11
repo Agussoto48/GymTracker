@@ -2,9 +2,8 @@ import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, test } from 'vitest'
 import type { WorkoutSession } from '../domain/types.ts'
 import { db } from './db.ts'
+import { NotFoundError, ValidationError } from './errors.ts'
 import {
-  ExerciseNotFoundError,
-  ExerciseValidationError,
   createExercise,
   deleteExercise,
   isExerciseInUse,
@@ -41,7 +40,7 @@ describe('createExercise', () => {
   })
 
   test('rejects invalid input without writing', async () => {
-    await expect(createExercise({ ...bench, name: '' })).rejects.toBeInstanceOf(ExerciseValidationError)
+    await expect(createExercise({ ...bench, name: '' })).rejects.toBeInstanceOf(ValidationError)
     expect(await db.exercises.count()).toBe(0)
   })
 
@@ -80,7 +79,7 @@ describe('updateExercise', () => {
   test('rejects a name used by another exercise', async () => {
     await createExercise(bench)
     const other = await createExercise({ ...bench, name: 'Remo' })
-    await expect(updateExercise(other.id, bench)).rejects.toBeInstanceOf(ExerciseValidationError)
+    await expect(updateExercise(other.id, bench)).rejects.toBeInstanceOf(ValidationError)
   })
 
   test('blocks changing the kind once the exercise has history', async () => {
@@ -98,7 +97,7 @@ describe('updateExercise', () => {
   })
 
   test('fails for an unknown id', async () => {
-    await expect(updateExercise('missing', bench)).rejects.toBeInstanceOf(ExerciseNotFoundError)
+    await expect(updateExercise('missing', bench)).rejects.toBeInstanceOf(NotFoundError)
   })
 })
 
