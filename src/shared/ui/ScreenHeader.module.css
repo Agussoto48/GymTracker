@@ -1,0 +1,29 @@
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) 0 var(--space-6);
+}
+
+.titles {
+  min-width: 0;
+}
+
+.subtitle {
+  color: var(--label-2);
+  font-size: var(--text-subhead);
+  font-weight: 600;
+}
+
+.title {
+  font-size: var(--text-large-title);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.action {
+  flex-shrink: 0;
+}

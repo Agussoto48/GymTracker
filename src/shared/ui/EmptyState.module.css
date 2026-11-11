@@ -1,0 +1,23 @@
+.emptyState {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-6);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  text-align: center;
+}
+
+.title {
+  font-size: var(--text-headline);
+  font-weight: 600;
+}
+
+.message {
+  color: var(--label-2);
+  font-size: var(--text-subhead);
+  text-wrap: pretty;
+}
+
+.action {
+  margin-top: var(--space-3);
+}
