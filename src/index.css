@@ -1,111 +1,100 @@
+/* Tokens de diseño y estilos base. Los colores siguen el modo claro/oscuro del sistema. */
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
   color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  /* Superficies */
+  --bg: light-dark(#f2f2f5, #000000);
+  --surface: light-dark(#ffffff, #1c1c1e);
+  --surface-2: light-dark(#e9e9ee, #2c2c2e);
+  --separator: light-dark(#d4d4da, #3a3a3e);
+
+  /* Contenido. Contraste sobre --surface: 18,0 / 6,4 / 3,7 (claro) y 15,5 / 6,7 / 4,1 (oscuro) */
+  --label: light-dark(#16161a, #f4f4f6);
+  --label-2: light-dark(#5e5e68, #a2a2ab);
+  --label-3: light-dark(#85858f, #7c7c86); /* solo texto ≥ 18 pt: números «fantasma» de la última vez */
+
+  /* Acento = acción principal. Nada más usa este color. */
+  --accent: light-dark(#ffb21a, #ffc23d);
+  --on-accent: #231800; /* 9,7:1 y 10,8:1 sobre --accent */
+  --accent-text: light-dark(#8a5300, #ffc23d); /* texto o icono interactivo: 6,3:1 y 10,6:1 */
+
+  /* Señales */
+  --danger: light-dark(#c42b1c, #ff6b5e);
+
+  /* Tipografía: escala en rem sobre el cuerpo de 17 pt (crece con Dynamic Type en iOS) */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --text-large-title: 2rem; /* 34 */
+  --text-title: 1.3rem; /* 22 */
+  --text-headline: 1rem; /* 17 semibold */
+  --text-body: 1rem; /* 17 */
+  --text-subhead: 0.882rem; /* 15 */
+  --text-footnote: 0.765rem; /* 13 */
+  --text-caption: 0.706rem; /* 12 (mínimo iOS: 11) */
+  --text-figure: 1.65rem; /* 28: peso × reps */
+
+  /* Espaciado (múltiplos de 4) y forma */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --radius-control: 12px;
+  --radius-card: 16px;
+  --tap: 44px; /* objetivo táctil mínimo */
+  --tabbar-height: 56px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+/* Fallback (17 px) para navegadores sin Dynamic Type; en Safari iOS lo reemplaza -apple-system-body. */
+html {
+  font: 106.25% / 1.4 var(--font-sans);
+  font: -apple-system-body;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--label);
+  font-family: var(--font-sans);
+  line-height: 1.4;
 }
 
 h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
+h2,
+h3,
 p {
   margin: 0;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+button {
+  font: inherit;
+  color: inherit;
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+:focus-visible {
+  outline: 3px solid var(--accent-text);
+  outline-offset: 2px;
+}
+
+/* Cifras de entrenamiento: anchos iguales para que los números no «bailen» entre filas. */
+.figures {
+  font-variant-numeric: tabular-nums;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
