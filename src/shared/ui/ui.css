@@ -1,6 +1,6 @@
-/* Componentes compartidos. Tokens en src/index.css. */
+/* Shared components. Tokens live in src/index.css. */
 
-/* Encabezado con título grande */
+/* Large-title header */
 .screen-header {
   display: flex;
   align-items: flex-end;
@@ -31,7 +31,7 @@
   flex-shrink: 0;
 }
 
-/* Botones */
+/* Buttons */
 .button {
   min-height: var(--tap);
   min-width: var(--tap);
@@ -56,7 +56,7 @@
   color: var(--accent-text);
 }
 
-/* Deshabilitado: neutro en vez de transparente, para que no parezca un acento roto en modo oscuro. */
+/* Disabled: neutral fill instead of a faded accent. */
 .button:disabled {
   cursor: not-allowed;
   color: var(--label-3);
@@ -70,7 +70,7 @@
   filter: brightness(0.92);
 }
 
-/* Estado vacío */
+/* Empty state */
 .empty-state {
   display: grid;
   gap: var(--space-2);
@@ -95,7 +95,7 @@
   margin-top: var(--space-3);
 }
 
-/* Agrupación de secciones */
+/* Sections */
 .section {
   display: grid;
   gap: var(--space-3);

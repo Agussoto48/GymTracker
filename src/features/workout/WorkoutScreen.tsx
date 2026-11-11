@@ -13,7 +13,7 @@ function todayLabel(date: Date): string {
 }
 
 export function WorkoutScreen() {
-  // Se calcula una vez al montar la pantalla, no en cada render.
+  // Computed once on mount, not on every render.
   const [today] = useState(() => todayLabel(new Date()))
 
   return (

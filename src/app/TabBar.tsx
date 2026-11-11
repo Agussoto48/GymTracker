@@ -17,7 +17,7 @@ type TabBarProps = {
   onSelect: (tab: TabId) => void
 }
 
-// Barra de pestañas: solo navega, nunca ejecuta acciones (HIG tab-bars › Best practices).
+// Tabs only navigate; actions belong in the screen (HIG tab bars).
 export function TabBar({ current, onSelect }: TabBarProps) {
   return (
     <nav className="tab-bar" aria-label="Secciones">

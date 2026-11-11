@@ -4,7 +4,7 @@ import './ui.css'
 type EmptyStateProps = {
   title: string
   message: string
-  /** Botón que invita a la siguiente acción. */
+  /** Button that invites the next action. */
   action?: ReactNode
 }
 

@@ -1,27 +1,27 @@
-/* Tokens de diseño y estilos base. Los colores siguen el modo claro/oscuro del sistema. */
+/* Design tokens and base styles. Colors follow the system light/dark mode. */
 :root {
   color-scheme: light dark;
 
-  /* Superficies */
+  /* Surfaces */
   --bg: light-dark(#f2f2f5, #000000);
   --surface: light-dark(#ffffff, #1c1c1e);
   --surface-2: light-dark(#e9e9ee, #2c2c2e);
   --separator: light-dark(#d4d4da, #3a3a3e);
 
-  /* Contenido. Contraste sobre --surface: 18,0 / 6,4 / 3,7 (claro) y 15,5 / 6,7 / 4,1 (oscuro) */
+  /* Content. Contrast on --surface: 18.0 / 6.4 / 3.7 (light), 15.5 / 6.7 / 4.1 (dark) */
   --label: light-dark(#16161a, #f4f4f6);
   --label-2: light-dark(#5e5e68, #a2a2ab);
-  --label-3: light-dark(#85858f, #7c7c86); /* solo texto ≥ 18 pt: números «fantasma» de la última vez */
+  --label-3: light-dark(#85858f, #7c7c86); /* large text only (≥ 18 pt): "last time" ghost numbers */
 
-  /* Acento = acción principal. Nada más usa este color. */
+  /* Accent = primary action only. */
   --accent: light-dark(#ffb21a, #ffc23d);
-  --on-accent: #231800; /* 9,7:1 y 10,8:1 sobre --accent */
-  --accent-text: light-dark(#8a5300, #ffc23d); /* texto o icono interactivo: 6,3:1 y 10,6:1 */
+  --on-accent: #231800; /* 9.7:1 and 10.8:1 on --accent */
+  --accent-text: light-dark(#8a5300, #ffc23d); /* interactive text or icon: 6.3:1 and 10.6:1 */
 
-  /* Señales */
+  /* Signals */
   --danger: light-dark(#c42b1c, #ff6b5e);
 
-  /* Tipografía: escala en rem sobre el cuerpo de 17 pt (crece con Dynamic Type en iOS) */
+  /* Type scale in rem over a 17 pt body (scales with Dynamic Type on iOS) */
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --text-large-title: 2rem; /* 34 */
   --text-title: 1.3rem; /* 22 */
@@ -29,10 +29,10 @@
   --text-body: 1rem; /* 17 */
   --text-subhead: 0.882rem; /* 15 */
   --text-footnote: 0.765rem; /* 13 */
-  --text-caption: 0.706rem; /* 12 (mínimo iOS: 11) */
-  --text-figure: 1.65rem; /* 28: peso × reps */
+  --text-caption: 0.706rem; /* 12 (iOS minimum: 11) */
+  --text-figure: 1.65rem; /* 28: weight × reps */
 
-  /* Espaciado (múltiplos de 4) y forma */
+  /* Spacing (multiples of 4) and shape */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -41,11 +41,11 @@
   --space-8: 32px;
   --radius-control: 12px;
   --radius-card: 16px;
-  --tap: 44px; /* objetivo táctil mínimo */
+  --tap: 44px; /* minimum touch target */
   --tabbar-height: 56px;
 }
 
-/* Fallback (17 px) para navegadores sin Dynamic Type; en Safari iOS lo reemplaza -apple-system-body. */
+/* 17 px fallback; Safari iOS uses -apple-system-body to follow Dynamic Type. */
 html {
   font: 106.25% / 1.4 var(--font-sans);
   font: -apple-system-body;
@@ -85,7 +85,7 @@ button {
   outline-offset: 2px;
 }
 
-/* Cifras de entrenamiento: anchos iguales para que los números no «bailen» entre filas. */
+/* Tabular digits so numbers line up across rows. */
 .figures {
   font-variant-numeric: tabular-nums;
 }

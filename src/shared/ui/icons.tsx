@@ -1,5 +1,4 @@
-// Iconos de pestañas: rellenos, 24×24, un solo lenguaje visual (HIG tab-bars › Best practices).
-// Son decorativos: la etiqueta de texto de cada pestaña da el nombre accesible.
+// Filled 24×24 tab icons. Decorative: each tab label provides the accessible name.
 
 type IconProps = { className?: string }
 

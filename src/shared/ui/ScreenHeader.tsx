@@ -4,7 +4,7 @@ import './ui.css'
 type ScreenHeaderProps = {
   title: string
   subtitle?: string
-  /** Acción sobre la vista actual (barra de herramientas), p. ej. «Nueva». */
+  /** Action for the current screen, e.g. "Nueva". */
   action?: ReactNode
 }
 

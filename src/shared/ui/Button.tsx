@@ -2,7 +2,7 @@ import type { ButtonHTMLAttributes } from 'react'
 import './ui.css'
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  /** primary: acción principal (una por pantalla). plain: acción secundaria o de barra. */
+  /** primary: main action (one per screen). plain: secondary or toolbar action. */
   variant?: 'primary' | 'plain'
 }
 

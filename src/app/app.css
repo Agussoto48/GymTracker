@@ -1,4 +1,4 @@
-/* Estructura de la app: contenido + barra de pestañas flotante abajo. */
+/* App layout: content plus a floating tab bar at the bottom. */
 
 .app__content {
   width: 100%;
@@ -7,11 +7,11 @@
   padding-top: max(var(--space-4), env(safe-area-inset-top));
   padding-right: max(var(--space-4), env(safe-area-inset-right));
   padding-left: max(var(--space-4), env(safe-area-inset-left));
-  /* Deja libre el espacio de la barra de pestañas y de la barra de inicio del iPhone. */
+  /* Leave room for the tab bar and the iPhone home indicator. */
   padding-bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom) + var(--space-8));
 }
 
-/* Capa funcional translúcida solo en la barra, nunca en el contenido (HIG liquid-glass / materials). */
+/* Translucency only on the tab bar, never on content (HIG materials). */
 .tab-bar {
   position: fixed;
   inset: auto 0 0;
@@ -61,7 +61,7 @@
   color: var(--label);
 }
 
-/* La selección no depende solo del color: la etiqueta también pasa a negrita. */
+/* Selected state is not color-only: the label also turns bold. */
 .tab-bar__item[aria-current='page'] .tab-bar__label {
   font-weight: 700;
 }
