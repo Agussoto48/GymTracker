@@ -1,0 +1,17 @@
+.section {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.section + .section {
+  margin-top: var(--space-8);
+}
+
+.title {
+  color: var(--label-2);
+  font-size: var(--text-footnote);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 0 var(--space-1);
+}

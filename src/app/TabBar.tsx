@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react'
 import { ExercisesIcon, HistoryIcon, RoutinesIcon, WorkoutIcon } from '../shared/ui/icons.tsx'
+import styles from './TabBar.module.css'
 
 export type TabId = 'workout' | 'routines' | 'exercises' | 'history'
 
@@ -20,20 +21,20 @@ type TabBarProps = {
 // Tabs only navigate; actions belong in the screen (HIG tab bars).
 export function TabBar({ current, onSelect }: TabBarProps) {
   return (
-    <nav className="tab-bar" aria-label="Secciones">
-      <ul className="tab-bar__list">
+    <nav className={styles.tabBar} aria-label="Secciones">
+      <ul className={styles.list}>
         {TABS.map(({ id, label, Icon }) => {
           const selected = id === current
           return (
             <li key={id}>
               <button
                 type="button"
-                className="tab-bar__item"
+                className={styles.item}
                 aria-current={selected ? 'page' : undefined}
                 onClick={() => onSelect(id)}
               >
-                <Icon className="tab-bar__icon" />
-                <span className="tab-bar__label">{label}</span>
+                <Icon className={styles.icon} />
+                <span className={styles.label}>{label}</span>
               </button>
             </li>
           )

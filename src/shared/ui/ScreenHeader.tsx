@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import './ui.css'
+import styles from './ScreenHeader.module.css'
 
 type ScreenHeaderProps = {
   title: string
@@ -10,12 +10,12 @@ type ScreenHeaderProps = {
 
 export function ScreenHeader({ title, subtitle, action }: ScreenHeaderProps) {
   return (
-    <header className="screen-header">
-      <div className="screen-header__titles">
-        {subtitle && <p className="screen-header__subtitle">{subtitle}</p>}
-        <h1 className="screen-header__title">{title}</h1>
+    <header className={styles.header}>
+      <div className={styles.titles}>
+        {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
+        <h1 className={styles.title}>{title}</h1>
       </div>
-      {action && <div className="screen-header__action">{action}</div>}
+      {action && <div className={styles.action}>{action}</div>}
     </header>
   )
 }

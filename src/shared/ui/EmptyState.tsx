@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import './ui.css'
+import styles from './EmptyState.module.css'
 
 type EmptyStateProps = {
   title: string
@@ -10,10 +10,10 @@ type EmptyStateProps = {
 
 export function EmptyState({ title, message, action }: EmptyStateProps) {
   return (
-    <section className="empty-state">
-      <h2 className="empty-state__title">{title}</h2>
-      <p className="empty-state__message">{message}</p>
-      {action && <div className="empty-state__action">{action}</div>}
+    <section className={styles.emptyState}>
+      <h2 className={styles.title}>{title}</h2>
+      <p className={styles.message}>{message}</p>
+      {action && <div className={styles.action}>{action}</div>}
     </section>
   )
 }

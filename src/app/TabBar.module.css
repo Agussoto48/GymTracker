@@ -1,18 +1,5 @@
-/* App layout: content plus a floating tab bar at the bottom. */
-
-.app__content {
-  width: 100%;
-  max-width: 640px;
-  margin: 0 auto;
-  padding-top: max(var(--space-4), env(safe-area-inset-top));
-  padding-right: max(var(--space-4), env(safe-area-inset-right));
-  padding-left: max(var(--space-4), env(safe-area-inset-left));
-  /* Leave room for the tab bar and the iPhone home indicator. */
-  padding-bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom) + var(--space-8));
-}
-
 /* Translucency only on the tab bar, never on content (HIG materials). */
-.tab-bar {
+.tabBar {
   position: fixed;
   inset: auto 0 0;
   padding-bottom: env(safe-area-inset-bottom);
@@ -25,14 +12,14 @@
 }
 
 @media (prefers-reduced-transparency: reduce) {
-  .tab-bar {
+  .tabBar {
     background: var(--surface);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
 }
 
-.tab-bar__list {
+.list {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   max-width: 640px;
@@ -41,7 +28,7 @@
   list-style: none;
 }
 
-.tab-bar__item {
+.item {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -57,20 +44,20 @@
   touch-action: manipulation;
 }
 
-.tab-bar__item[aria-current='page'] {
+.item[aria-current='page'] {
   color: var(--label);
 }
 
 /* Selected state is not color-only: the label also turns bold. */
-.tab-bar__item[aria-current='page'] .tab-bar__label {
+.item[aria-current='page'] .label {
   font-weight: 700;
 }
 
-.tab-bar__icon {
+.icon {
   flex-shrink: 0;
 }
 
-.tab-bar__label {
+.label {
   font-size: var(--text-caption);
   font-weight: 500;
   line-height: 1.2;

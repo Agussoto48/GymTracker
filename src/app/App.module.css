@@ -1,0 +1,10 @@
+.content {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding-top: max(var(--space-4), env(safe-area-inset-top));
+  padding-right: max(var(--space-4), env(safe-area-inset-right));
+  padding-left: max(var(--space-4), env(safe-area-inset-left));
+  /* Leave room for the tab bar and the iPhone home indicator. */
+  padding-bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom) + var(--space-8));
+}

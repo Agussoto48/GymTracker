@@ -1,0 +1,37 @@
+.button {
+  min-height: var(--tap);
+  min-width: var(--tap);
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: var(--radius-control);
+  font-size: var(--text-body);
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.primary {
+  width: 100%;
+  min-height: 52px;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.plain {
+  background: transparent;
+  color: var(--accent-text);
+}
+
+/* Disabled: neutral fill instead of a faded accent. */
+.button:disabled {
+  cursor: not-allowed;
+  color: var(--label-3);
+}
+
+.primary:disabled {
+  background: var(--surface-2);
+}
+
+.button:not(:disabled):active {
+  filter: brightness(0.92);
+}
