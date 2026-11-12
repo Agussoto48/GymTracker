@@ -7,7 +7,7 @@ import { MoreButton } from '../../shared/ui/MoreButton.tsx'
 import { ScreenHeader } from '../../shared/ui/ScreenHeader.tsx'
 import { Section } from '../../shared/ui/Section.tsx'
 import { ExerciseList } from './components/ExerciseList.tsx'
-import { ExerciseSheet } from './components/ExerciseSheet.tsx'
+import { ExerciseSheet } from '../../shared/ui/ExerciseSheet.tsx'
 
 /** Sheet state: closed, creating a new exercise, or editing one. */
 type Editing = { exercise: Exercise | null } | null

@@ -3,24 +3,24 @@ import {
   EXERCISE_NAME_MAX_LENGTH,
   EXERCISE_NOTES_MAX_LENGTH,
   type ExerciseErrors,
-} from '../../../domain/exercise.ts'
-import type { Exercise, WeightUnit } from '../../../domain/types.ts'
-import { latestTargets, parseDecimal } from '../../../domain/workout.ts'
-import { ValidationError } from '../../../data/errors.ts'
+} from '../../domain/exercise.ts'
+import type { Exercise, WeightUnit } from '../../domain/types.ts'
+import { latestTargets, parseDecimal } from '../../domain/workout.ts'
+import { ValidationError } from '../../data/errors.ts'
 import {
   createExercise,
   deleteExercise,
   setExerciseArchived,
   updateExercise,
   useExerciseInUse,
-} from '../../../data/exercises.ts'
-import { useLastPerformance } from '../../../data/sessions.ts'
-import { formatNumber, formatSet, formatShortDate } from '../../../shared/lib/format.ts'
-import { SegmentedControl } from '../../../shared/ui/SegmentedControl.tsx'
-import { useConfirm } from '../../../shared/ui/useConfirm.tsx'
-import { RowButton } from '../../../shared/ui/RowButton.tsx'
-import { Sheet } from '../../../shared/ui/Sheet.tsx'
-import { TextField } from '../../../shared/ui/TextField.tsx'
+} from '../../data/exercises.ts'
+import { useLastPerformance } from '../../data/sessions.ts'
+import { formatNumber, formatSet, formatShortDate } from '../lib/format.ts'
+import { SegmentedControl } from './SegmentedControl.tsx'
+import { useConfirm } from './useConfirm.tsx'
+import { RowButton } from './RowButton.tsx'
+import { Sheet } from './Sheet.tsx'
+import { TextField } from './TextField.tsx'
 import styles from './ExerciseSheet.module.css'
 
 const UNIT_OPTIONS = [
