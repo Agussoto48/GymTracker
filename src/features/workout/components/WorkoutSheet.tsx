@@ -26,7 +26,14 @@ export function WorkoutSheet({ session, exercises, routineName, onHide }: Workou
   const [expandedId, setExpandedId] = useState<string | null>(
     (session.exercises.find((e) => e.sets.length === 0) ?? session.exercises.at(-1))?.exerciseId ?? null,
   )
+  // Scroll only after the person opens a card or adds an exercise, not when the sheet opens.
+  const [userExpanded, setUserExpanded] = useState(false)
   const byId = new Map(exercises.map((e) => [e.id, e]))
+
+  function expand(exerciseId: string) {
+    setUserExpanded(true)
+    setExpandedId(exerciseId)
+  }
   const totalSets = session.exercises.reduce((sum, e) => sum + e.sets.length, 0)
   const [confirm, confirmSheet] = useConfirm()
 
@@ -87,7 +94,8 @@ export function WorkoutSheet({ session, exercises, routineName, onHide }: Workou
               entry={entry}
               exercise={exercise}
               expanded={expandedId === entry.exerciseId}
-              onExpand={() => setExpandedId(entry.exerciseId)}
+              onExpand={() => expand(entry.exerciseId)}
+              scrollOnExpand={userExpanded}
             />
           )
         })}
@@ -112,8 +120,8 @@ export function WorkoutSheet({ session, exercises, routineName, onHide }: Workou
           onClose={() => setPicking(false)}
           onPick={async (exercise) => {
             await addExerciseToSession(session.id, exercise.id)
-            setExpandedId(exercise.id)
             setPicking(false)
+            expand(exercise.id)
           }}
         />
       )}

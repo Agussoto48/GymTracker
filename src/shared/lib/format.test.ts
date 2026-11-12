@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { count, formatDuration, formatMonth } from './format.ts'
+import { count, formatDuration, formatMonth, formatSet } from './format.ts'
 
 describe('formatDuration', () => {
   test.each([
@@ -21,4 +21,11 @@ test('formatMonth capitalises and drops "de"', () => {
 test('count picks singular or plural', () => {
   expect(count(1, 'serie', 'series')).toBe('1 serie')
   expect(count(0, 'serie', 'series')).toBe('0 series')
+})
+
+test('formatSet reads naturally for each kind', () => {
+  expect(formatSet({ weight: { value: 62.5, unit: 'kg' }, reps: 10 }, 'weighted')).toBe('62,5 kg × 10')
+  expect(formatSet({ weight: null, reps: 8 }, 'bodyweight')).toBe('8 reps')
+  expect(formatSet({ weight: { value: 0, unit: 'kg' }, reps: 8 }, 'bodyweight')).toBe('8 reps')
+  expect(formatSet({ weight: { value: 10, unit: 'lb' }, reps: 6 }, 'bodyweight')).toBe('+10 lb × 6')
 })

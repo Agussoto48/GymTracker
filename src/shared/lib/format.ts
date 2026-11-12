@@ -7,14 +7,12 @@ export function formatNumber(value: number): string {
   return numberFormat.format(value)
 }
 
-/** Weighted: "62,5 kg". Bodyweight: "Corporal" or "+10 kg" (added load). */
-export function formatWeight(weight: Weight | null, kind: ExerciseKind): string {
-  if (kind === 'bodyweight') return weight && weight.value > 0 ? `+${formatNumber(weight.value)} ${weight.unit}` : 'Corporal'
-  return weight ? `${formatNumber(weight.value)} ${weight.unit}` : '—'
-}
-
+/** Weighted: "62,5 kg × 10". Bodyweight: "8 reps", or "+10 kg × 8" with added load. */
 export function formatSet(set: { weight: Weight | null; reps: number }, kind: ExerciseKind): string {
-  return `${formatWeight(set.weight, kind)} × ${set.reps}`
+  const loaded = set.weight !== null && (kind === 'weighted' || set.weight.value > 0)
+  if (!loaded) return kind === 'bodyweight' ? `${set.reps} reps` : `— × ${set.reps}`
+  const sign = kind === 'bodyweight' ? '+' : ''
+  return `${sign}${formatNumber(set.weight!.value)} ${set.weight!.unit} × ${set.reps}`
 }
 
 /** "jue 6 nov" */
