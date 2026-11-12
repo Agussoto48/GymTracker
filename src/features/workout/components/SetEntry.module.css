@@ -63,6 +63,16 @@
   color: var(--label-3);
 }
 
+/* Filled fields have no border; with Increase Contrast they get one so their edges stay visible. */
+@media (prefers-contrast: more) {
+  .number,
+  .chip,
+  .unit,
+  .steppers button {
+    border: 2px solid var(--separator);
+  }
+}
+
 .number[aria-invalid='true'] {
   border-color: var(--danger);
 }

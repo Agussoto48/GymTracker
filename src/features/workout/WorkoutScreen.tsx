@@ -35,10 +35,12 @@ export function WorkoutScreen() {
       {session && (
         <Section title="En curso">
           <div className={styles.active}>
-            <p className="figures">
-              {sessionName} · iniciado {formatTime(session.startedAt)} ·{' '}
-              {minutesBetween(session.startedAt, now)} min
-            </p>
+            <div className={styles.activeText}>
+              <p className={styles.activeName}>{sessionName}</p>
+              <p className={`${styles.activeMeta} figures`}>
+                Iniciado {formatTime(session.startedAt)} · {minutesBetween(session.startedAt, now)} min
+              </p>
+            </div>
             <Button variant="primary" onClick={() => setOpen(true)}>
               Continuar entrenamiento
             </Button>
@@ -47,12 +49,12 @@ export function WorkoutScreen() {
       )}
 
       {session === null && (
-        <Section title="Sin rutina">
+        <div className={styles.start}>
           <Button variant="primary" onClick={() => void start()}>
             Empezar entrenamiento libre
           </Button>
           <p className={styles.note}>Eliges los ejercicios de tu catálogo sobre la marcha.</p>
-        </Section>
+        </div>
       )}
 
       <Section title="Tus rutinas">

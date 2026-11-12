@@ -47,6 +47,18 @@
   --tabbar-height: 56px;
 }
 
+/* Settings › Accessibility › Increase Contrast: stronger secondary text, separators and signals.
+   Secondary text ≥ 7:1, separators ≥ 3:1 on cards, in both appearances. */
+@media (prefers-contrast: more) {
+  :root {
+    --separator: light-dark(#8a8a92, #8e8e96);
+    --label-2: light-dark(#404048, #c9c9d1);
+    --label-3: light-dark(#5c5c64, #a9a9b3);
+    --accent-text: light-dark(#6b4000, #ffd166);
+    --danger: light-dark(#a11d10, #ff8f85);
+  }
+}
+
 /* 17 px fallback; Safari iOS uses -apple-system-body to follow Dynamic Type. */
 html {
   font: 106.25% / 1.4 var(--font-sans);

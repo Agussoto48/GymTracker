@@ -45,7 +45,7 @@
 }
 
 .item[aria-current='page'] {
-  color: var(--label);
+  color: var(--accent-text); /* brand color on the selected tab (HIG branding); 6.3:1 light, 10.6:1 dark */
 }
 
 /* Selected state is not color-only: the label also turns bold. */
