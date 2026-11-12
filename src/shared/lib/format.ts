@@ -32,3 +32,31 @@ export function formatTime(iso: string): string {
 export function minutesBetween(fromIso: string, to: number): number {
   return Math.max(0, Math.floor((to - Date.parse(fromIso)) / 60000))
 }
+
+/** "Jueves, 6 de noviembre" (capitalised, for headings). */
+export function formatLongDate(date: Date | string): string {
+  const text = new Intl.DateTimeFormat('es', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(date))
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+/** "2026-11" → "Noviembre 2026" */
+export function formatMonth(month: string): string {
+  const [year, monthNumber] = month.split('-').map(Number)
+  const text = new Intl.DateTimeFormat('es', { month: 'long', year: 'numeric' })
+    .format(new Date(year, monthNumber - 1, 1))
+    .replace(' de ', ' ')
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+/** 52 → "52 min"; 65 → "1 h 5 min"; 120 → "2 h" */
+export function formatDuration(minutes: number): string {
+  if (minutes < 60) return `${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`
+}
+
+/** count(3, 'serie', 'series') → "3 series" */
+export function count(n: number, one: string, many: string): string {
+  return `${n} ${n === 1 ? one : many}`
+}

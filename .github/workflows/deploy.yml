@@ -1,9 +1,9 @@
-# Checks and deploys the app to GitHub Pages on every push to main.
+# Checks and deploys the app to GitHub Pages on every push to develop.
 name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [develop]
   workflow_dispatch:
 
 permissions:

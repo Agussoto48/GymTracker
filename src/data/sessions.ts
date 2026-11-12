@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { exerciseHistory, type ExerciseHistoryEntry } from '../domain/history.ts'
 import type { Id, WorkoutSession, WorkoutSet } from '../domain/types.ts'
 import {
   SESSION_NOTES_MAX_LENGTH,
@@ -159,6 +160,31 @@ export async function discardSession(sessionId: Id): Promise<void> {
   })
 }
 
+/** Deletes a finished workout (history). A workout in progress is discarded with `discardSession`. */
+export async function deleteFinishedSession(sessionId: Id): Promise<void> {
+  await db.transaction('rw', db.sessions, async () => {
+    const session = await db.sessions.get(sessionId)
+    if (!session) throw new NotFoundError('Session', sessionId)
+    if (session.finishedAt === null) throw new Error('A workout in progress is discarded, not deleted.')
+    await db.sessions.delete(sessionId)
+  })
+}
+
+/** Finished workouts, newest first. */
+export async function listFinishedSessions(): Promise<WorkoutSession[]> {
+  return db.sessions
+    .orderBy('startedAt')
+    .reverse()
+    .filter((session) => session.finishedAt !== null)
+    .toArray()
+}
+
+/** Every finished workout where the exercise has sets, newest first, from any routine. */
+export async function getExerciseHistory(exerciseId: Id): Promise<ExerciseHistoryEntry[]> {
+  const candidates = await db.sessions.where('exerciseIds').equals(exerciseId).toArray()
+  return exerciseHistory(candidates, exerciseId)
+}
+
 /** Last finished performance of an exercise, from any routine. */
 export async function getLastPerformance(exerciseId: Id, excludeSessionId?: Id): Promise<LastPerformance | null> {
   const candidates = await db.sessions.where('exerciseIds').equals(exerciseId).toArray()
@@ -172,4 +198,12 @@ export function useActiveSession(): WorkoutSession | null | undefined {
 
 export function useLastPerformance(exerciseId: Id, excludeSessionId: Id): LastPerformance | null | undefined {
   return useLiveQuery(() => getLastPerformance(exerciseId, excludeSessionId), [exerciseId, excludeSessionId])
+}
+
+export function useFinishedSessions(): WorkoutSession[] | undefined {
+  return useLiveQuery(listFinishedSessions)
+}
+
+export function useExerciseHistory(exerciseId: Id): ExerciseHistoryEntry[] | undefined {
+  return useLiveQuery(() => getExerciseHistory(exerciseId), [exerciseId])
 }
