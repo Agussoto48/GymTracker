@@ -3,7 +3,6 @@ import type { Routine } from '../../domain/types.ts'
 import { useExercises } from '../../data/exercises.ts'
 import { useRoutines } from '../../data/routines.ts'
 import { AddButton } from '../../shared/ui/AddButton.tsx'
-import { Button } from '../../shared/ui/Button.tsx'
 import { EmptyState } from '../../shared/ui/EmptyState.tsx'
 import { MoreButton } from '../../shared/ui/MoreButton.tsx'
 import { ScreenHeader } from '../../shared/ui/ScreenHeader.tsx'
@@ -29,23 +28,17 @@ export function RoutinesScreen() {
       <ScreenHeader
         title="Rutinas"
         leading={<MoreButton />}
-        action={active.length > 0 && <AddButton label="Nueva rutina" onClick={openNew} />}
+        // Without exercises a routine cannot be saved, so the + only shows once there is something to pick.
+        action={!noExercises && <AddButton label="Nueva rutina" onClick={openNew} />}
       />
 
       {routines && active.length === 0 && (
         <EmptyState
-          title="Arma tu primera rutina"
+          variant="plain"
           message={
             noExercises
-              ? 'Primero agrega ejercicios en la pestaña Ejercicios; después podrás armar tus días aquí.'
-              : 'Cada rutina es un día de tu split, como «Push» o «Pierna», con los ejercicios que quieras en el orden que prefieras.'
-          }
-          action={
-            !noExercises && (
-              <Button variant="primary" onClick={openNew}>
-                Crear rutina
-              </Button>
-            )
+              ? 'Para crear una rutina, primero agrega ejercicios en la pestaña Ejercicios.'
+              : 'Aquí aparecerán las rutinas que crees\u00a0con\u00a0+.'
           }
         />
       )}

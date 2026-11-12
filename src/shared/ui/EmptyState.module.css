@@ -1,10 +1,18 @@
-.emptyState {
+.card,
+.plain {
   display: grid;
   gap: var(--space-2);
+  text-align: center;
+}
+
+.card {
   padding: var(--space-8) var(--space-6);
   border-radius: var(--radius-card);
   background: var(--surface);
-  text-align: center;
+}
+
+.plain {
+  padding: var(--space-6) var(--space-4) var(--space-8);
 }
 
 .title {
@@ -16,6 +24,10 @@
   color: var(--label-2);
   font-size: var(--text-subhead);
   text-wrap: pretty;
+}
+
+.plain .message {
+  font-size: var(--text-body);
 }
 
 .action {

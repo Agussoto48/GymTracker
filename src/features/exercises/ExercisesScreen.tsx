@@ -2,7 +2,6 @@ import { useState } from 'react'
 import type { Exercise } from '../../domain/types.ts'
 import { useExercises } from '../../data/exercises.ts'
 import { AddButton } from '../../shared/ui/AddButton.tsx'
-import { Button } from '../../shared/ui/Button.tsx'
 import { EmptyState } from '../../shared/ui/EmptyState.tsx'
 import { MoreButton } from '../../shared/ui/MoreButton.tsx'
 import { ScreenHeader } from '../../shared/ui/ScreenHeader.tsx'
@@ -27,19 +26,11 @@ export function ExercisesScreen() {
       <ScreenHeader
         title="Ejercicios"
         leading={<MoreButton />}
-        action={active.length > 0 && <AddButton label="Nuevo ejercicio" onClick={openNew} />}
+        action={<AddButton label="Nuevo ejercicio" onClick={openNew} />}
       />
 
       {exercises && active.length === 0 && (
-        <EmptyState
-          title="Tu catálogo está vacío"
-          message="Agrega los ejercicios que haces, con su unidad (kg o lb) y una nota fija como «asiento en 4». Después los usarás en tus rutinas."
-          action={
-            <Button variant="primary" onClick={openNew}>
-              Agregar ejercicio
-            </Button>
-          }
-        />
+        <EmptyState variant="plain" message={'Aquí aparecerán los ejercicios que agregues\u00a0con\u00a0+.'} />
       )}
 
       {active.length > 0 && (

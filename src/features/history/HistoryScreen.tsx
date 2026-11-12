@@ -51,12 +51,7 @@ export function HistoryScreen() {
       )}
 
       {sessions?.length === 0 && (
-        <Section title="Entrenamientos">
-          <EmptyState
-            title="Todavía no hay entrenamientos"
-            message="Cuando termines un entrenamiento aparecerá aquí, con todas sus series y notas."
-          />
-        </Section>
+        <EmptyState variant="plain" message="Aquí aparecerán tus entrenamientos cuando los termines." />
       )}
 
       {groups.map((group) => (
