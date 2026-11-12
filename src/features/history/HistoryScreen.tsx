@@ -4,13 +4,14 @@ import type { Id } from '../../domain/types.ts'
 import { useExercises } from '../../data/exercises.ts'
 import { useRoutines } from '../../data/routines.ts'
 import { useFinishedSessions } from '../../data/sessions.ts'
-import { formatMonth } from '../../shared/lib/format.ts'
+import { formatMonth, formatShortDate, formatTime } from '../../shared/lib/format.ts'
 import { EmptyState } from '../../shared/ui/EmptyState.tsx'
 import { ScreenHeader } from '../../shared/ui/ScreenHeader.tsx'
 import { Section } from '../../shared/ui/Section.tsx'
 import { BackupSection } from './components/BackupSection.tsx'
 import { SessionList } from './components/SessionList.tsx'
 import { SessionSheet } from './components/SessionSheet.tsx'
+import styles from './HistoryScreen.module.css'
 
 export function HistoryScreen() {
   const sessions = useFinishedSessions()
@@ -44,6 +45,10 @@ export function HistoryScreen() {
       ))}
 
       <BackupSection />
+
+      <p className={`${styles.version} figures`}>
+        Versión del {formatShortDate(__APP_BUILD_TIME__)}, {formatTime(__APP_BUILD_TIME__)}
+      </p>
 
       {selected && exercises && (
         <SessionSheet

@@ -4,6 +4,7 @@ import { HistoryScreen } from '../features/history/HistoryScreen.tsx'
 import { RoutinesScreen } from '../features/routines/RoutinesScreen.tsx'
 import { WorkoutScreen } from '../features/workout/WorkoutScreen.tsx'
 import { TabBar, type TabId } from './TabBar.tsx'
+import { UpdateBanner } from './UpdateBanner.tsx'
 import styles from './App.module.css'
 
 const SCREENS: Record<TabId, ComponentType> = {
@@ -22,6 +23,7 @@ export default function App() {
       <main className={styles.content}>
         <Screen />
       </main>
+      <UpdateBanner />
       <TabBar current={tab} onSelect={setTab} />
     </>
   )

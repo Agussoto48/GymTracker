@@ -1,0 +1,6 @@
+.version {
+  margin-top: var(--space-6);
+  color: var(--label-2);
+  font-size: var(--text-footnote);
+  text-align: center;
+}
