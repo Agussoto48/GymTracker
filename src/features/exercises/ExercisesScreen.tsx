@@ -4,6 +4,7 @@ import { useExercises } from '../../data/exercises.ts'
 import { AddButton } from '../../shared/ui/AddButton.tsx'
 import { Button } from '../../shared/ui/Button.tsx'
 import { EmptyState } from '../../shared/ui/EmptyState.tsx'
+import { MoreButton } from '../../shared/ui/MoreButton.tsx'
 import { ScreenHeader } from '../../shared/ui/ScreenHeader.tsx'
 import { Section } from '../../shared/ui/Section.tsx'
 import { ExerciseList } from './components/ExerciseList.tsx'
@@ -25,6 +26,7 @@ export function ExercisesScreen() {
     <>
       <ScreenHeader
         title="Ejercicios"
+        leading={<MoreButton />}
         action={active.length > 0 && <AddButton label="Nuevo ejercicio" onClick={openNew} />}
       />
 
