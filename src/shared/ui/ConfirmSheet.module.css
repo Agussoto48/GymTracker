@@ -1,0 +1,85 @@
+/* Action sheet: two grouped cards at the bottom, within thumb reach (HIG action sheets). */
+.sheet {
+  position: fixed;
+  inset: auto 0 0;
+  display: grid;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 520px;
+  max-height: none;
+  margin: 0 auto;
+  padding: var(--space-2) var(--space-2) max(var(--space-2), env(safe-area-inset-bottom));
+  border: 0;
+  background: transparent;
+  color: var(--label);
+  animation: rise 220ms ease-out;
+}
+
+.sheet::backdrop {
+  background: rgb(0 0 0 / 0.4);
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet {
+    animation: none;
+  }
+}
+
+.group {
+  display: grid;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  /* Elevated in dark mode: lighter than the sheet or screen behind it. */
+  background: light-dark(#ffffff, #2c2c2e);
+}
+
+.text {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  text-align: center;
+}
+
+.title {
+  color: var(--label-2);
+  font-size: var(--text-footnote);
+  font-weight: 600;
+}
+
+.message {
+  color: var(--label-2);
+  font-size: var(--text-footnote);
+}
+
+.button {
+  min-height: 56px;
+  padding: 0 var(--space-4);
+  border: 0;
+  border-top: 1px solid var(--separator);
+  background: none;
+  color: var(--accent-text);
+  font-size: var(--text-body);
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.button:active {
+  background: var(--surface-2);
+}
+
+.destructive {
+  color: var(--danger);
+}
+
+.cancel {
+  border-top: 0;
+  font-weight: 700;
+}

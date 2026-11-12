@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import type { Exercise, WorkoutSession } from '../../../domain/types.ts'
 import { addExerciseToSession, discardSession, finishSession } from '../../../data/sessions.ts'
-import { formatTime, minutesBetween } from '../../../shared/lib/format.ts'
+import { count, formatTime, minutesBetween } from '../../../shared/lib/format.ts'
 import { useNow } from '../../../shared/lib/useNow.ts'
 import { ExercisePicker } from '../../../shared/ui/ExercisePicker.tsx'
+import { useConfirm } from '../../../shared/ui/useConfirm.tsx'
+import { RowButton } from '../../../shared/ui/RowButton.tsx'
 import { Sheet } from '../../../shared/ui/Sheet.tsx'
 import { ExerciseCard } from './ExerciseCard.tsx'
 import styles from './WorkoutSheet.module.css'
@@ -26,19 +28,36 @@ export function WorkoutSheet({ session, exercises, routineName, onHide }: Workou
   )
   const byId = new Map(exercises.map((e) => [e.id, e]))
   const totalSets = session.exercises.reduce((sum, e) => sum + e.sets.length, 0)
+  const [confirm, confirmSheet] = useConfirm()
 
   async function finish() {
     if (totalSets === 0) {
-      if (window.confirm('No registraste ninguna serie. ¿Descartar este entrenamiento?')) await discardSession(session.id)
+      const confirmed = await confirm({
+        title: 'No registraste ninguna serie',
+        message: 'Un entrenamiento sin series no se guarda.',
+        confirmLabel: 'Descartar entrenamiento',
+        destructive: true,
+      })
+      if (confirmed) await discardSession(session.id)
       return
     }
-    if (window.confirm(`¿Terminar el entrenamiento? (${totalSets} ${totalSets === 1 ? 'serie' : 'series'})`)) {
-      await finishSession(session.id)
-    }
+    const withoutSets = session.exercises.filter((e) => e.sets.length === 0).length
+    const confirmed = await confirm({
+      title: `¿Terminar el entrenamiento? (${count(totalSets, 'serie', 'series')})`,
+      message: withoutSets > 0 ? `Los ejercicios sin series (${withoutSets}) no se guardan.` : undefined,
+      confirmLabel: 'Terminar entrenamiento',
+    })
+    if (confirmed) await finishSession(session.id)
   }
 
   async function discard() {
-    if (window.confirm('¿Descartar este entrenamiento? Se borrarán todas sus series.')) await discardSession(session.id)
+    const confirmed = await confirm({
+      title: '¿Descartar este entrenamiento?',
+      message: totalSets > 0 ? `Se borrarán sus ${count(totalSets, 'serie', 'series')}.` : undefined,
+      confirmLabel: 'Descartar entrenamiento',
+      destructive: true,
+    })
+    if (confirmed) await discardSession(session.id)
   }
 
   return (
@@ -82,9 +101,9 @@ export function WorkoutSheet({ session, exercises, routineName, onHide }: Workou
         + Agregar ejercicio
       </button>
 
-      <button type="button" className={styles.discard} onClick={() => void discard()}>
+      <RowButton tone="destructive" className={styles.discard} onClick={() => void discard()}>
         Descartar entrenamiento
-      </button>
+      </RowButton>
 
       {picking && (
         <ExercisePicker
@@ -98,6 +117,7 @@ export function WorkoutSheet({ session, exercises, routineName, onHide }: Workou
           }}
         />
       )}
+      {confirmSheet}
     </Sheet>
   )
 }

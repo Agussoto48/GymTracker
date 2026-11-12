@@ -118,19 +118,7 @@
   margin-top: var(--space-8);
 }
 
-.manageButton {
-  min-height: var(--tap);
-  border: 0;
-  border-radius: var(--radius-control);
-  background: var(--surface);
-  color: var(--accent-text);
-  font-weight: 600;
-  cursor: pointer;
-}
 
-.danger {
-  color: var(--danger);
-}
 
 .hint {
   padding: 0 var(--space-1);

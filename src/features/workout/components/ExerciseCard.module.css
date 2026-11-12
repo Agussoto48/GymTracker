@@ -94,17 +94,6 @@
   color: var(--label-2);
 }
 
-.remove,
-.deleteSet {
-  justify-self: start;
-  min-height: var(--tap);
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--danger);
-  font-size: var(--text-subhead);
-  cursor: pointer;
-}
 
 .editBody {
   display: grid;

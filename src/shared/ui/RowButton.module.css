@@ -1,0 +1,26 @@
+.row {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--accent-text);
+  font-size: var(--text-body);
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.row:not(:disabled):active {
+  background: var(--surface-2);
+}
+
+.row:disabled {
+  color: var(--label-3);
+  cursor: not-allowed;
+}
+
+.destructive {
+  color: var(--danger);
+}

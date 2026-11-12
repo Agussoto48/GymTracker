@@ -9,7 +9,9 @@ import {
   updateSet,
   useLastPerformance,
 } from '../../../data/sessions.ts'
-import { formatNumber, formatSet, formatShortDate } from '../../../shared/lib/format.ts'
+import { count, formatNumber, formatSet, formatShortDate } from '../../../shared/lib/format.ts'
+import { useConfirm } from '../../../shared/ui/useConfirm.tsx'
+import { RowButton } from '../../../shared/ui/RowButton.tsx'
 import { Sheet } from '../../../shared/ui/Sheet.tsx'
 import { TextField } from '../../../shared/ui/TextField.tsx'
 import { SetEntry } from './SetEntry.tsx'
@@ -34,6 +36,7 @@ export function ExerciseCard({ sessionId, entry, exercise, expanded, onExpand }:
   const lastTime = useLastPerformance(exercise.id, sessionId)
   const [editing, setEditing] = useState<{ set: WorkoutSet; index: number } | null>(null)
   const [notes, setNotes] = useState(entry.notes)
+  const [confirm, confirmSheet] = useConfirm()
 
   if (!expanded) {
     const lastSet = entry.sets.at(-1)
@@ -51,9 +54,17 @@ export function ExerciseCard({ sessionId, entry, exercise, expanded, onExpand }:
 
   const suggestion = suggestNextSet(lastTime?.sets ?? [], entry.sets)
 
-  function remove() {
-    if (entry.sets.length > 0 && !window.confirm(`¿Quitar «${exercise.name}» y sus ${entry.sets.length} series?`)) return
-    void removeExerciseFromSession(sessionId, exercise.id)
+  async function remove() {
+    if (entry.sets.length > 0) {
+      const confirmed = await confirm({
+        title: `¿Quitar «${exercise.name}»?`,
+        message: `Se borrarán sus ${count(entry.sets.length, 'serie', 'series')} de hoy.`,
+        confirmLabel: 'Quitar ejercicio',
+        destructive: true,
+      })
+      if (!confirmed) return
+    }
+    await removeExerciseFromSession(sessionId, exercise.id)
   }
 
   return (
@@ -114,9 +125,9 @@ export function ExerciseCard({ sessionId, entry, exercise, expanded, onExpand }:
         maxLength={500}
       />
 
-      <button type="button" className={styles.remove} onClick={remove}>
+      <RowButton tone="destructive" onClick={() => void remove()}>
         Quitar ejercicio
-      </button>
+      </RowButton>
 
       {editing && (
         <Sheet title={`Editar serie ${editing.index + 1}`} onClose={() => setEditing(null)}>
@@ -132,19 +143,19 @@ export function ExerciseCard({ sessionId, entry, exercise, expanded, onExpand }:
                 setEditing(null)
               }}
             />
-            <button
-              type="button"
-              className={styles.deleteSet}
+            <RowButton
+              tone="destructive"
               onClick={async () => {
                 await deleteSet(sessionId, exercise.id, editing.set.id)
                 setEditing(null)
               }}
             >
               Eliminar serie
-            </button>
+            </RowButton>
           </div>
         </Sheet>
       )}
+      {confirmSheet}
     </section>
   )
 }

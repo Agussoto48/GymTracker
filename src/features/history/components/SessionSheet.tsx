@@ -3,6 +3,8 @@ import { summarizeSession } from '../../../domain/history.ts'
 import type { Exercise, Id, WorkoutSession } from '../../../domain/types.ts'
 import { deleteFinishedSession } from '../../../data/sessions.ts'
 import { count, formatDuration, formatLongDate, formatShortDate, formatTime } from '../../../shared/lib/format.ts'
+import { useConfirm } from '../../../shared/ui/useConfirm.tsx'
+import { RowButton } from '../../../shared/ui/RowButton.tsx'
 import { Sheet } from '../../../shared/ui/Sheet.tsx'
 import { ExerciseHistorySheet } from './ExerciseHistorySheet.tsx'
 import { sessionName } from './sessionName.ts'
@@ -21,10 +23,16 @@ export function SessionSheet({ session, exerciseById, routineNames, onClose }: S
   const [historyOf, setHistoryOf] = useState<Exercise | null>(null)
   const [error, setError] = useState<string | null>(null)
   const summary = summarizeSession(session)
+  const [confirm, confirmSheet] = useConfirm()
 
   async function remove() {
-    const sets = count(summary.setCount, 'serie', 'series')
-    if (!window.confirm(`¿Eliminar el entrenamiento del ${formatShortDate(session.startedAt)} y sus ${sets}? No se puede deshacer.`)) return
+    const confirmed = await confirm({
+      title: `¿Eliminar el entrenamiento del ${formatShortDate(session.startedAt)}?`,
+      message: `Se borrarán sus ${count(summary.setCount, 'serie', 'series')}. No se puede deshacer.`,
+      confirmLabel: 'Eliminar entrenamiento',
+      destructive: true,
+    })
+    if (!confirmed) return
     try {
       await deleteFinishedSession(session.id)
       onClose()
@@ -75,9 +83,9 @@ export function SessionSheet({ session, exerciseById, routineNames, onClose }: S
       </div>
 
       <div className={styles.manage}>
-        <button type="button" className={styles.delete} onClick={() => void remove()}>
+        <RowButton tone="destructive" onClick={() => void remove()}>
           Eliminar entrenamiento
-        </button>
+        </RowButton>
         {error && (
           <p role="alert" className={styles.error}>
             {error}
@@ -93,6 +101,7 @@ export function SessionSheet({ session, exerciseById, routineNames, onClose }: S
           onClose={() => setHistoryOf(null)}
         />
       )}
+      {confirmSheet}
     </Sheet>
   )
 }

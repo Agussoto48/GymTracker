@@ -14,6 +14,8 @@ import {
   useExerciseInUse,
 } from '../../../data/exercises.ts'
 import { SegmentedControl } from '../../../shared/ui/SegmentedControl.tsx'
+import { useConfirm } from '../../../shared/ui/useConfirm.tsx'
+import { RowButton } from '../../../shared/ui/RowButton.tsx'
 import { Sheet } from '../../../shared/ui/Sheet.tsx'
 import { TextField } from '../../../shared/ui/TextField.tsx'
 import styles from './ExerciseSheet.module.css'
@@ -44,6 +46,7 @@ export function ExerciseSheet({ exercise, onClose }: ExerciseSheetProps) {
   const [formError, setFormError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const inUse = useExerciseInUse(exercise?.id ?? null)
+  const [confirm, confirmSheet] = useConfirm()
 
   async function run(action: () => Promise<unknown>) {
     setSaving(true)
@@ -65,10 +68,15 @@ export function ExerciseSheet({ exercise, onClose }: ExerciseSheetProps) {
     void run(() => (exercise ? updateExercise(exercise.id, input) : createExercise(input)))
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!exercise) return
-    if (!window.confirm(`¿Eliminar «${exercise.name}»? Esta acción no se puede deshacer.`)) return
-    void run(() => deleteExercise(exercise.id))
+    const confirmed = await confirm({
+      title: `¿Eliminar «${exercise.name}»?`,
+      message: 'No se puede deshacer.',
+      confirmLabel: 'Eliminar ejercicio',
+      destructive: true,
+    })
+    if (confirmed) void run(() => deleteExercise(exercise.id))
   }
 
   return (
@@ -132,23 +140,16 @@ export function ExerciseSheet({ exercise, onClose }: ExerciseSheetProps) {
 
       {exercise && (
         <div className={styles.manage}>
-          <button
-            type="button"
-            className={styles.manageButton}
+          <RowButton
             disabled={saving}
             onClick={() => void run(() => setExerciseArchived(exercise.id, exercise.archivedAt === null))}
           >
             {exercise.archivedAt === null ? 'Archivar ejercicio' : 'Restaurar ejercicio'}
-          </button>
+          </RowButton>
           {inUse === false && (
-            <button
-              type="button"
-              className={`${styles.manageButton} ${styles.danger}`}
-              disabled={saving}
-              onClick={handleDelete}
-            >
+            <RowButton tone="destructive" disabled={saving} onClick={() => void handleDelete()}>
               Eliminar ejercicio
-            </button>
+            </RowButton>
           )}
           <p className={styles.manageHint}>
             {inUse
@@ -157,6 +158,7 @@ export function ExerciseSheet({ exercise, onClose }: ExerciseSheetProps) {
           </p>
         </div>
       )}
+      {confirmSheet}
     </Sheet>
   )
 }

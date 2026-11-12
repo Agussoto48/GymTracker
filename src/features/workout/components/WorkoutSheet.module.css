@@ -40,12 +40,5 @@
 }
 
 .discard {
-  display: block;
-  min-height: var(--tap);
-  margin: var(--space-8) auto 0;
-  border: 0;
-  background: none;
-  color: var(--danger);
-  font-size: var(--text-subhead);
-  cursor: pointer;
+  margin-top: var(--space-8);
 }
