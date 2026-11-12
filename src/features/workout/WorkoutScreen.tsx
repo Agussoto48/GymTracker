@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useExercises } from '../../data/exercises.ts'
 import { useRoutines } from '../../data/routines.ts'
 import { startSession, useActiveSession } from '../../data/sessions.ts'
-import { formatTime, minutesBetween } from '../../shared/lib/format.ts'
+import { formatLongDate, formatTime, minutesBetween } from '../../shared/lib/format.ts'
 import { useNow } from '../../shared/lib/useNow.ts'
 import { Button } from '../../shared/ui/Button.tsx'
 import { EmptyState } from '../../shared/ui/EmptyState.tsx'
@@ -11,18 +11,9 @@ import { Section } from '../../shared/ui/Section.tsx'
 import { WorkoutSheet } from './components/WorkoutSheet.tsx'
 import styles from './WorkoutScreen.module.css'
 
-function todayLabel(date: Date): string {
-  const text = new Intl.DateTimeFormat('es', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  }).format(date)
-  return text.charAt(0).toUpperCase() + text.slice(1)
-}
-
 export function WorkoutScreen() {
   // Computed once on mount, not on every render.
-  const [today] = useState(() => todayLabel(new Date()))
+  const [today] = useState(() => formatLongDate(new Date()))
   const now = useNow()
   const session = useActiveSession()
   const exercises = useExercises()
