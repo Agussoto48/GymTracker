@@ -1,13 +1,22 @@
 .header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-4) 0 var(--space-6);
+  padding-bottom: var(--space-6);
 }
 
-.titles {
-  min-width: 0;
+/* Toolbar row above the large title: menu on the leading edge, actions on the trailing edge. */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: var(--tap);
+  margin-bottom: var(--space-2);
+}
+
+.leading,
+.trailing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 .subtitle {
@@ -22,8 +31,4 @@
   line-height: 1.15;
   letter-spacing: -0.01em;
   overflow-wrap: anywhere;
-}
-
-.action {
-  flex-shrink: 0;
 }
