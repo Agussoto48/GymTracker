@@ -2,17 +2,20 @@ import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, test } from 'vitest'
 import type { Exercise } from '../domain/types.ts'
 import { db } from './db.ts'
-import { ValidationError } from './errors.ts'
+import { NotFoundError, ValidationError } from './errors.ts'
 import { createExercise } from './exercises.ts'
 import {
   ActiveSessionExistsError,
   addExerciseToSession,
   addSet,
+  deleteFinishedSession,
   deleteSet,
   discardSession,
   finishSession,
   getActiveSession,
+  getExerciseHistory,
   getLastPerformance,
+  listFinishedSessions,
   removeExerciseFromSession,
   setSessionExerciseNotes,
   startSession,
@@ -144,5 +147,47 @@ describe('getLastPerformance', () => {
 
   test('returns null for an exercise never done', async () => {
     expect(await getLastPerformance(pullUp.id)).toBeNull()
+  })
+})
+
+describe('history', () => {
+  async function workout(sets: [number, number][]) {
+    const session = await startSession()
+    await addExerciseToSession(session.id, pec.id)
+    for (const [weight, reps] of sets) await addSet(session.id, pec.id, kg(weight, reps))
+    const finished = await finishSession(session.id)
+    await new Promise((r) => setTimeout(r, 5)) // distinct startedAt for ordering
+    return finished
+  }
+
+  test('lists finished workouts newest first, without the one in progress', async () => {
+    const first = await workout([[55, 10]])
+    const second = await workout([[60, 10]])
+    await startSession()
+    expect((await listFinishedSessions()).map((s) => s.id)).toEqual([second.id, first.id])
+  })
+
+  test('exercise history covers every finished workout with the exercise', async () => {
+    const first = await workout([[55, 10]])
+    const second = await workout([[60, 10], [60, 8]])
+    const history = await getExerciseHistory(pec.id)
+    expect(history.map((h) => h.sessionId)).toEqual([second.id, first.id])
+    expect(history[0].sets.map((s) => s.reps)).toEqual([10, 8])
+    expect(await getExerciseHistory(pullUp.id)).toEqual([])
+  })
+
+  test('deleting a finished workout removes it and updates "last time"', async () => {
+    const first = await workout([[55, 10]])
+    const second = await workout([[60, 10]])
+    await deleteFinishedSession(second.id)
+    expect((await listFinishedSessions()).map((s) => s.id)).toEqual([first.id])
+    expect((await getLastPerformance(pec.id))?.sessionId).toBe(first.id)
+  })
+
+  test('does not delete the workout in progress or an unknown one', async () => {
+    const active = await startSession()
+    await expect(deleteFinishedSession(active.id)).rejects.toThrow()
+    expect((await getActiveSession())?.id).toBe(active.id)
+    await expect(deleteFinishedSession('missing')).rejects.toBeInstanceOf(NotFoundError)
   })
 })
