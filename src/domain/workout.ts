@@ -1,3 +1,4 @@
+import { exerciseHistory } from './history.ts'
 import type { ExerciseKind, Id, Weight, WeightUnit, WorkoutSession, WorkoutSet } from './types.ts'
 
 export const WEIGHT_MAX = 2000
@@ -89,16 +90,9 @@ export function findLastPerformance(
   exerciseId: Id,
   excludeSessionId?: Id,
 ): LastPerformance | null {
-  let best: LastPerformance | null = null
-  for (const session of sessions) {
-    if (session.finishedAt === null || session.id === excludeSessionId) continue
-    const entry = session.exercises.find((e) => e.exerciseId === exerciseId)
-    if (!entry || entry.sets.length === 0) continue
-    if (!best || session.startedAt > best.startedAt) {
-      best = { sessionId: session.id, startedAt: session.startedAt, sets: entry.sets }
-    }
-  }
-  return best
+  const others = sessions.filter((session) => session.id !== excludeSessionId)
+  const [latest] = exerciseHistory(others, exerciseId)
+  return latest ? { sessionId: latest.sessionId, startedAt: latest.startedAt, sets: latest.sets } : null
 }
 
 export type SetSuggestion = {
