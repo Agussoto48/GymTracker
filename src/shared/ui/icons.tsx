@@ -1,4 +1,4 @@
-// Filled 24×24 tab icons. Decorative: each tab label provides the accessible name.
+// Filled 24×24 icons. Decorative: the tab label or the button's aria-label provides the accessible name.
 
 type IconProps = { className?: string }
 
@@ -57,6 +57,15 @@ export function HistoryIcon({ className }: IconProps) {
       <rect x="7" y="2.5" width="2" height="4" rx="1" />
       <rect x="15" y="2.5" width="2" height="4" rx="1" />
       <rect x="7" y="12" width="3" height="3" rx="0.75" />
+    </svg>
+  )
+}
+
+export function PlusIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <rect x="10.75" y="4" width="2.5" height="16" rx="1.25" />
+      <rect x="4" y="10.75" width="16" height="2.5" rx="1.25" />
     </svg>
   )
 }

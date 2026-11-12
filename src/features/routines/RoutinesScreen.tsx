@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Routine } from '../../domain/types.ts'
 import { useExercises } from '../../data/exercises.ts'
 import { useRoutines } from '../../data/routines.ts'
+import { AddButton } from '../../shared/ui/AddButton.tsx'
 import { Button } from '../../shared/ui/Button.tsx'
 import { EmptyState } from '../../shared/ui/EmptyState.tsx'
 import { ScreenHeader } from '../../shared/ui/ScreenHeader.tsx'
@@ -26,13 +27,7 @@ export function RoutinesScreen() {
     <>
       <ScreenHeader
         title="Rutinas"
-        action={
-          active.length > 0 && (
-            <Button onClick={openNew} aria-label="Nueva rutina">
-              Nueva
-            </Button>
-          )
-        }
+        action={active.length > 0 && <AddButton label="Nueva rutina" onClick={openNew} />}
       />
 
       {routines && active.length === 0 && (

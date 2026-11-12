@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Exercise } from '../../domain/types.ts'
 import { useExercises } from '../../data/exercises.ts'
+import { AddButton } from '../../shared/ui/AddButton.tsx'
 import { Button } from '../../shared/ui/Button.tsx'
 import { EmptyState } from '../../shared/ui/EmptyState.tsx'
 import { ScreenHeader } from '../../shared/ui/ScreenHeader.tsx'
@@ -24,13 +25,7 @@ export function ExercisesScreen() {
     <>
       <ScreenHeader
         title="Ejercicios"
-        action={
-          active.length > 0 && (
-            <Button onClick={openNew} aria-label="Nuevo ejercicio">
-              Nuevo
-            </Button>
-          )
-        }
+        action={active.length > 0 && <AddButton label="Nuevo ejercicio" onClick={openNew} />}
       />
 
       {exercises && active.length === 0 && (
