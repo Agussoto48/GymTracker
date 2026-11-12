@@ -107,6 +107,25 @@ export function ExerciseSheet({ exercise, onClose }: ExerciseSheetProps) {
     if (confirmed) void run(() => deleteExercise(exercise.id))
   }
 
+  async function handleArchive() {
+    if (!exercise) return
+    const archiving = exercise.archivedAt === null
+    const confirmed = await confirm(
+      archiving
+        ? {
+            title: `¿Archivar «${exercise.name}»?`,
+            message: 'Pasará a Archivados y no aparecerá al entrenar. Su historial se conserva.',
+            confirmLabel: 'Archivar ejercicio',
+          }
+        : {
+            title: `¿Restaurar «${exercise.name}»?`,
+            message: 'Volverá al catálogo y a las rutinas que lo incluyen.',
+            confirmLabel: 'Restaurar ejercicio',
+          },
+    )
+    if (confirmed) void run(() => setExerciseArchived(exercise.id, archiving))
+  }
+
   const targetsError = errors.targetSets ?? errors.targetReps
   const loading = exercise !== null && lastTime === undefined
 
@@ -223,7 +242,7 @@ export function ExerciseSheet({ exercise, onClose }: ExerciseSheetProps) {
         <div className={styles.manage}>
           <RowButton
             disabled={saving}
-            onClick={() => void run(() => setExerciseArchived(exercise.id, exercise.archivedAt === null))}
+            onClick={() => void handleArchive()}
           >
             {exercise.archivedAt === null ? 'Archivar ejercicio' : 'Restaurar ejercicio'}
           </RowButton>
