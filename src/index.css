@@ -15,13 +15,15 @@
   --label-3: light-dark(#77777f, #8e8e98); /* large text only (≥ 18 pt): ghosts; ≥ 3:1 on every surface incl. --surface-2 */
 
   /* Accent = primary action only. */
-  --accent: light-dark(#ffb21a, #ffc23d);
-  --on-accent: #231800; /* 9.7:1 and 10.8:1 on --accent */
-  --accent-text: light-dark(#8a5300, #ffc23d); /* interactive text or icon: 6.3:1 and 10.6:1 */
+  /* Orange from the "GT" logo (#FE5901); a bit brighter in dark, like iOS system colors. */
+  --accent: light-dark(#fe5901, #ff6a1f);
+  --on-accent: #1a1b1d; /* logo black: 5.5:1 and 6.0:1 on --accent */
+  --accent-text: light-dark(#a83800, #ff8a4c); /* interactive text or icon: ≥ 5.4:1 light, ≥ 5.2:1 dark on every surface */
 
   /* Signals */
-  --danger: light-dark(#c42b1c, #ff6b5e);
-  --on-danger: light-dark(#ffffff, #2a0602); /* 5.7:1 and 6.7:1 on --danger */
+  /* Crimson, ~30° of hue away from the orange accent so "delete" never reads as "tap". */
+  --danger: light-dark(#c8103a, #ff6680); /* ≥ 4.8:1 light, ≥ 4.9:1 dark on cards */
+  --on-danger: light-dark(#ffffff, #2a0610); /* 5.9:1 and 6.6:1 on --danger */
 
   /* Type scale in rem over a 17 pt body (scales with Dynamic Type on iOS) */
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -54,8 +56,8 @@
     --separator: light-dark(#8a8a92, #8e8e96);
     --label-2: light-dark(#404048, #c9c9d1);
     --label-3: light-dark(#5c5c64, #a9a9b3);
-    --accent-text: light-dark(#6b4000, #ffd166);
-    --danger: light-dark(#a11d10, #ff8f85);
+    --accent-text: light-dark(#8a2e00, #ffad80);
+    --danger: light-dark(#a3002b, #ff8fa3);
   }
 }
 

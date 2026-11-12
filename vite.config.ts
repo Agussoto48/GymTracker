@@ -19,7 +19,7 @@ export default defineConfig(({ command, isPreview }) => {
       VitePWA({
         registerType: 'prompt',
         injectRegister: false,
-        includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+        includeManifestIcons: false, // already matched by globPatterns
         manifest: {
           id: base,
           name: 'GymTracker',
@@ -32,16 +32,17 @@ export default defineConfig(({ command, isPreview }) => {
           orientation: 'portrait',
           background_color: '#f2f2f5',
           theme_color: '#f2f2f5',
-          // PNGs rendered from public/favicon.svg:
-          // rsvg-convert -w 512 -h 512 public/favicon.svg -o public/pwa-512x512.png (also 192 and 180 apple-touch-icon)
+          // "GT" logo assets (black and orange on white). The maskable one has a wider safe margin.
           icons: [
-            { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
-            { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
-            { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+            { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+            { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+            { src: 'pwa-maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
           ],
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
+          globPatterns: ['**/*.{js,css,html,svg,png,ico}'], // the plugin adds the manifest itself
+          // Logo variants kept for design use; the app does not load them, so phones don't download them.
+          globIgnores: ['logo.svg', 'logo-dark.svg', 'logo.png', 'pwa-dark-512x512.png'],
           navigateFallback: 'index.html',
           cleanupOutdatedCaches: true,
         },

@@ -77,7 +77,7 @@
   font-weight: 600;
 }
 
-/* The set the ghost repeats: amber like the "Repetir" button it feeds, plus bold (not color alone). */
+/* The set the ghost repeats: accent-filled like the "Repetir" button it feeds, plus bold (not color alone). */
 .lastTimeSets .lastTimeCurrent {
   background: var(--accent);
   color: var(--on-accent);
