@@ -66,6 +66,25 @@ export function RoutineSheet({ routine, exercises, onClose }: RoutineSheetProps)
     if (confirmed) void run(() => deleteRoutine(routine.id))
   }
 
+  async function handleArchive() {
+    if (!routine) return
+    const archiving = routine.archivedAt === null
+    const confirmed = await confirm(
+      archiving
+        ? {
+            title: `¿Archivar la rutina «${routine.name}»?`,
+            message: 'Pasará a Archivadas y no aparecerá en Entrenar. Su historial se conserva.',
+            confirmLabel: 'Archivar rutina',
+          }
+        : {
+            title: `¿Restaurar la rutina «${routine.name}»?`,
+            message: 'Volverá a aparecer en Entrenar.',
+            confirmLabel: 'Restaurar rutina',
+          },
+    )
+    if (confirmed) void run(() => setRoutineArchived(routine.id, archiving))
+  }
+
   const move = (from: number, to: number) => setExerciseIds((ids) => moveItem(ids, from, to))
 
   return (
@@ -157,7 +176,7 @@ export function RoutineSheet({ routine, exercises, onClose }: RoutineSheetProps)
         <div className={styles.manage}>
           <RowButton
             disabled={saving}
-            onClick={() => void run(() => setRoutineArchived(routine.id, routine.archivedAt === null))}
+            onClick={() => void handleArchive()}
           >
             {routine.archivedAt === null ? 'Archivar rutina' : 'Restaurar rutina'}
           </RowButton>
