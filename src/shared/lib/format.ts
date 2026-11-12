@@ -1,4 +1,4 @@
-import type { ExerciseKind, Weight } from '../../domain/types.ts'
+import type { ExerciseKind, Weight, WeightUnit } from '../../domain/types.ts'
 
 const numberFormat = new Intl.NumberFormat('es', { maximumFractionDigits: 2, useGrouping: false })
 
@@ -13,6 +13,24 @@ export function formatSet(set: { weight: Weight | null; reps: number }, kind: Ex
   if (!loaded) return kind === 'bodyweight' ? `${set.reps} reps` : `— × ${set.reps}`
   const sign = kind === 'bodyweight' ? '+' : ''
   return `${sign}${formatNumber(set.weight!.value)} ${set.weight!.unit} × ${set.reps}`
+}
+
+/** Targets: "3 × 10 · 40 kg", "3 series", "10 reps · +5 kg" (bodyweight). Empty when there are none. */
+export function formatTarget(target: {
+  sets: number | null
+  reps: number | null
+  weight: number | null
+  unit: WeightUnit
+  kind: ExerciseKind
+}): string {
+  const parts: string[] = []
+  if (target.sets !== null && target.reps !== null) parts.push(`${target.sets} × ${target.reps}`)
+  else if (target.sets !== null) parts.push(`${target.sets} ${target.sets === 1 ? 'serie' : 'series'}`)
+  else if (target.reps !== null) parts.push(`${target.reps} reps`)
+  if (target.weight !== null && (target.kind === 'weighted' || target.weight > 0)) {
+    parts.push(`${target.kind === 'bodyweight' ? '+' : ''}${formatNumber(target.weight)} ${target.unit}`)
+  }
+  return parts.join(' · ')
 }
 
 /** "jue 6 nov" */

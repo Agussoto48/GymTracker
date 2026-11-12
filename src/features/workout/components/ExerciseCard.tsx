@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Exercise, SessionExercise, WorkoutSet } from '../../../domain/types.ts'
-import { suggestNextSet, type SetInput } from '../../../domain/workout.ts'
+import { activeTarget, suggestNextSet, type SetInput } from '../../../domain/workout.ts'
 import {
   addSet,
   deleteSet,
@@ -9,7 +9,7 @@ import {
   updateSet,
   useLastPerformance,
 } from '../../../data/sessions.ts'
-import { count, formatNumber, formatSet, formatShortDate } from '../../../shared/lib/format.ts'
+import { count, formatNumber, formatSet, formatShortDate, formatTarget } from '../../../shared/lib/format.ts'
 import { useConfirm } from '../../../shared/ui/useConfirm.tsx'
 import { RowButton } from '../../../shared/ui/RowButton.tsx'
 import { Sheet } from '../../../shared/ui/Sheet.tsx'
@@ -66,7 +66,19 @@ export function ExerciseCard({ sessionId, entry, exercise, expanded, onExpand, s
     )
   }
 
-  const suggestion = suggestNextSet(lastTime?.sets ?? [], entry.sets)
+  // Targets drive the first ghost when newer than last time (domain/workout.ts › activeTarget).
+  const target = lastTime === undefined ? null : activeTarget(exercise, lastTime)
+  const suggestion = suggestNextSet(lastTime?.sets ?? [], entry.sets, target)
+  // Sets × reps are always a guide; the target weight only while it is the one being proposed.
+  const targetText = formatTarget({
+    sets: exercise.targetSets,
+    reps: exercise.targetReps,
+    weight: target ? exercise.targetWeight : null,
+    unit: exercise.defaultUnit,
+    kind: exercise.kind,
+  })
+  const setNumber = entry.sets.length + 1
+  const ofTarget = exercise.targetSets !== null && setNumber <= exercise.targetSets ? ` de ${exercise.targetSets}` : ''
 
   async function remove() {
     if (entry.sets.length > 0) {
@@ -87,13 +99,14 @@ export function ExerciseCard({ sessionId, entry, exercise, expanded, onExpand, s
         {exercise.name}
       </h3>
       {exercise.notes && <p className={styles.fixedNote}>{exercise.notes}</p>}
+      {targetText && <p className={`${styles.target} figures`}>Objetivo · {targetText}</p>}
       {lastTime ? (
         <div className={styles.lastTime}>
           <p className={styles.lastTimeLabel}>Última vez · {formatShortDate(lastTime.startedAt)}</p>
-          {/* The highlighted set is the one the ghost below repeats. */}
+          {/* The highlighted set is the one the ghost below repeats (not when a target drives it). */}
           <ol className={`${styles.lastTimeSets} figures`} aria-label="Series de la última vez">
             {lastTime.sets.map((set, index) => {
-              const current = index === entry.sets.length
+              const current = suggestion?.source === 'last-time' && index === entry.sets.length
               return (
                 <li
                   key={set.id}
@@ -107,7 +120,9 @@ export function ExerciseCard({ sessionId, entry, exercise, expanded, onExpand, s
           </ol>
         </div>
       ) : (
-        <p className={styles.lastTimeLabel}>{lastTime === null ? 'Primera vez con este ejercicio.' : ' '}</p>
+        <p className={styles.lastTimeLabel}>
+          {lastTime === null ? 'Primera vez con este ejercicio.' : ' '}
+        </p>
       )}
 
       {entry.sets.length > 0 && (
@@ -134,7 +149,7 @@ export function ExerciseCard({ sessionId, entry, exercise, expanded, onExpand, s
 
       <SetEntry
         key={entry.sets.length}
-        title={`Serie ${entry.sets.length + 1}`}
+        title={`Serie ${setNumber}${ofTarget}`}
         kind={exercise.kind}
         defaultUnit={exercise.defaultUnit}
         suggestion={suggestion}

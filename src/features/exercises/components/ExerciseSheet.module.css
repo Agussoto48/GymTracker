@@ -19,6 +19,90 @@
   color: var(--label-3);
 }
 
+.lastTime {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.lastTimeLabel {
+  color: var(--label-2);
+  font-size: var(--text-footnote);
+  font-weight: 600;
+}
+
+.lastTimeSets {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* Sets × reps: two small number boxes with a "×" between them. */
+.targets {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.targetsLegend {
+  margin-bottom: var(--space-2);
+  padding: 0 var(--space-1);
+  font-size: var(--text-subhead);
+  font-weight: 600;
+}
+
+.targetsRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Same look as TextField's input; at least 16 px so Safari iOS does not zoom in. */
+.targetInput {
+  width: 5.5rem;
+  min-height: var(--tap);
+  padding: var(--space-3);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--label);
+  font: inherit;
+  font-size: max(16px, var(--text-body));
+  text-align: center;
+}
+
+.targetInput::placeholder {
+  color: var(--label-2);
+}
+
+.targetInput[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.times {
+  color: var(--label-2);
+  font-size: var(--text-title);
+  font-weight: 600;
+}
+
+.hint,
+.fieldError {
+  padding: 0 var(--space-1);
+  font-size: var(--text-footnote);
+}
+
+.hint {
+  color: var(--label-2);
+}
+
+.fieldError {
+  color: var(--danger);
+}
+
 .formError {
   color: var(--danger);
   font-size: var(--text-subhead);
