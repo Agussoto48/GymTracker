@@ -69,3 +69,14 @@
   color: var(--label-2);
   font-size: var(--text-footnote);
 }
+
+/* Compact accent button in the row of the routine in progress (the screen's only accent button). */
+.continue {
+  width: auto;
+  min-height: var(--tap);
+}
+
+/* Another workout is in progress: faded so it reads as unavailable (disabled controls are exempt from contrast). */
+.startRoutine:disabled {
+  opacity: 0.45;
+}

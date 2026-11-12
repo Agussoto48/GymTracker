@@ -22,6 +22,14 @@ export function WorkoutScreen() {
   const activeRoutines = routines?.filter((r) => r.archivedAt === null) ?? []
   const sessionRoutine = session?.routineId ? routines?.find((r) => r.id === session.routineId) : undefined
   const sessionName = sessionRoutine?.name ?? (session?.routineId ? 'Rutina' : 'Entrenamiento libre')
+  // A routine workout is continued from its row; the "En curso" card is for free workouts
+  // (or a routine archived meanwhile, which has no row).
+  const inProgressId = activeRoutines.some((r) => r.id === session?.routineId) ? session?.routineId : null
+  const othersBlocked = Boolean(session) && activeRoutines.some((r) => r.id !== inProgressId)
+  // The routine in progress is pinned first so it never ends up below the fold.
+  const shownRoutines = inProgressId
+    ? [...activeRoutines.filter((r) => r.id === inProgressId), ...activeRoutines.filter((r) => r.id !== inProgressId)]
+    : activeRoutines
 
   async function start(routineId: string | null = null) {
     await startSession(routineId)
@@ -32,7 +40,7 @@ export function WorkoutScreen() {
     <>
       <ScreenHeader title="Entrenar" subtitle={today} />
 
-      {session && (
+      {session && !inProgressId && (
         <Section title="En curso">
           <div className={styles.active}>
             <div className={styles.activeText}>
@@ -62,26 +70,46 @@ export function WorkoutScreen() {
           <EmptyState variant="plain" message="Aquí aparecerán las rutinas que crees en la pestaña Rutinas." />
         ) : (
           <ul className={styles.routines}>
-            {activeRoutines.map((routine) => (
-              <li key={routine.id} className={styles.routine}>
-                <span className={styles.routineText}>
-                  <span className={styles.routineName}>{routine.name}</span>
-                  <span className={styles.routineMeta}>
-                    {routine.exerciseIds.length} {routine.exerciseIds.length === 1 ? 'ejercicio' : 'ejercicios'}
+            {shownRoutines.map((routine) =>
+              session && routine.id === inProgressId ? (
+                <li key={routine.id} className={styles.routine}>
+                  <span className={styles.routineText}>
+                    <span className={styles.routineName}>{routine.name}</span>
+                    <span className={`${styles.routineMeta} figures`}>
+                      En curso · {formatTime(session.startedAt)} · {minutesBetween(session.startedAt, now)} min
+                    </span>
                   </span>
-                </span>
-                <Button
-                  disabled={Boolean(session)}
-                  onClick={() => void start(routine.id)}
-                  aria-label={`Empezar ${routine.name}`}
-                >
-                  Empezar
-                </Button>
-              </li>
-            ))}
+                  <Button
+                    variant="primary"
+                    className={styles.continue}
+                    onClick={() => setOpen(true)}
+                    aria-label={`Continuar ${routine.name}`}
+                  >
+                    Continuar
+                  </Button>
+                </li>
+              ) : (
+                <li key={routine.id} className={styles.routine}>
+                  <span className={styles.routineText}>
+                    <span className={styles.routineName}>{routine.name}</span>
+                    <span className={styles.routineMeta}>
+                      {routine.exerciseIds.length} {routine.exerciseIds.length === 1 ? 'ejercicio' : 'ejercicios'}
+                    </span>
+                  </span>
+                  <Button
+                    className={styles.startRoutine}
+                    disabled={Boolean(session)}
+                    onClick={() => void start(routine.id)}
+                    aria-label={`Empezar ${routine.name}`}
+                  >
+                    Empezar
+                  </Button>
+                </li>
+              ),
+            )}
           </ul>
         )}
-        {session && activeRoutines.length > 0 && (
+        {othersBlocked && (
           <p className={styles.note}>Termina o descarta el entrenamiento en curso para empezar otro.</p>
         )}
       </Section>
