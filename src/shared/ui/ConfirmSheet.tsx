@@ -27,6 +27,9 @@ export function ConfirmSheet({ title, message, confirmLabel, destructive = false
     const dialog = dialogRef.current
     if (!dialog) return
     dialog.showModal()
+    // Focus the sheet itself, not its first button: iOS would draw the focus ring on "Cancelar".
+    // Keyboard users reach the buttons with Tab as usual.
+    dialog.focus()
     return () => dialog.close()
   }, [])
 
@@ -34,6 +37,7 @@ export function ConfirmSheet({ title, message, confirmLabel, destructive = false
     <dialog
       ref={dialogRef}
       className={styles.sheet}
+      tabIndex={-1}
       role="alertdialog"
       aria-labelledby={titleId}
       aria-describedby={message ? messageId : undefined}
@@ -68,8 +72,8 @@ export function ConfirmSheet({ title, message, confirmLabel, destructive = false
         </button>
       </div>
       <div className={styles.group}>
-        {/* Focused first so Enter never confirms a destructive action by accident. */}
-        <button type="button" className={`${styles.button} ${styles.cancel}`} autoFocus onClick={() => onAnswer(false)}>
+        {/* Nothing is focused on open (the sheet is), so Enter never confirms a destructive action by accident. */}
+        <button type="button" className={`${styles.button} ${styles.cancel}`} onClick={() => onAnswer(false)}>
           Cancelar
         </button>
       </div>

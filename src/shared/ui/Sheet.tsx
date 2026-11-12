@@ -23,6 +23,9 @@ export function Sheet({ title, closeLabel = 'Cancelar', onClose, action, viewKey
     const dialog = dialogRef.current
     if (!dialog) return
     dialog.showModal()
+    // Focus the sheet itself, not its first button: iOS would draw the focus ring on "Cancelar".
+    // Keyboard users reach the buttons with Tab as usual.
+    dialog.focus()
     return () => dialog.close()
   }, [])
 
@@ -34,6 +37,7 @@ export function Sheet({ title, closeLabel = 'Cancelar', onClose, action, viewKey
     <dialog
       ref={dialogRef}
       className={styles.sheet}
+      tabIndex={-1}
       aria-labelledby={titleId}
       onCancel={(event) => {
         event.preventDefault()
