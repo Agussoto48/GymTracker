@@ -59,10 +59,7 @@ export function WorkoutScreen() {
 
       <Section title="Tus rutinas">
         {activeRoutines.length === 0 ? (
-          <EmptyState
-            title="Todavía no hay rutinas"
-            message="Arma tus días (Push, Pierna…) en la pestaña Rutinas y empieza desde aquí con un toque."
-          />
+          <EmptyState variant="plain" message="Aquí aparecerán las rutinas que crees en la pestaña Rutinas." />
         ) : (
           <ul className={styles.routines}>
             {activeRoutines.map((routine) => (
