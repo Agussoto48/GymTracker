@@ -28,8 +28,10 @@
   position: relative;
   display: grid;
   place-items: center;
+  min-width: var(--tap);
   min-height: var(--tap);
-  padding: 0 var(--space-2);
+  padding: 0 var(--space-3);
+  border: 1px solid transparent;
   border-radius: 10px;
   color: var(--label-2);
   font-weight: 600;
@@ -43,8 +45,10 @@
   pointer-events: none;
 }
 
-/* Selected: raised surface plus primary text color, not color alone. */
+/* Selected: raised surface, primary text and an edge that reaches 3:1 against the track
+   (--label-3: 3.7:1 in both appearances; WCAG 1.4.11), not color alone. */
 .segment:has(input:checked) {
+  border-color: var(--label-3);
   background: var(--thumb);
   color: var(--label);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.15);
