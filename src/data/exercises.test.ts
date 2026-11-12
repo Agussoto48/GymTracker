@@ -39,6 +39,19 @@ describe('createExercise', () => {
     expect(await db.exercises.get(created.id)).toEqual(created)
   })
 
+  test('stores targets and when they were set; none when not given', async () => {
+    const withTargets = await createExercise({ ...bench, targetWeight: 40, targetSets: 3, targetReps: 10 })
+    expect(withTargets).toMatchObject({ targetWeight: 40, targetSets: 3, targetReps: 10, targetUpdatedAt: withTargets.createdAt })
+    const without = await createExercise({ ...bench, name: 'Remo' })
+    expect(without).toMatchObject({ targetWeight: null, targetSets: null, targetReps: null, targetUpdatedAt: null })
+  })
+
+  test('without an explicit kind, the weight decides it (empty = bodyweight)', async () => {
+    const { kind: _kind, ...noKind } = bench
+    expect((await createExercise({ ...noKind, name: 'Dominadas', targetSets: 3 })).kind).toBe('bodyweight')
+    expect((await createExercise({ ...noKind, name: 'Pec Deck', targetWeight: 40 })).kind).toBe('weighted')
+  })
+
   test('rejects invalid input without writing', async () => {
     await expect(createExercise({ ...bench, name: '' })).rejects.toBeInstanceOf(ValidationError)
     expect(await db.exercises.count()).toBe(0)
@@ -69,6 +82,28 @@ describe('updateExercise', () => {
     const updated = await updateExercise(created.id, { ...bench, name: 'Press banca plano', defaultUnit: 'lb' })
     expect(updated).toMatchObject({ id: created.id, name: 'Press banca plano', defaultUnit: 'lb' })
     expect(updated.createdAt).toBe(created.createdAt)
+  })
+
+  test('changes targets when given, keeps them when absent, and stamps only real changes', async () => {
+    const created = await createExercise({ ...bench, targetWeight: 40, targetSets: 3, targetReps: 10 })
+    await new Promise((r) => setTimeout(r, 5))
+    const changed = await updateExercise(created.id, { ...bench, targetWeight: 45, targetSets: 3, targetReps: 10 })
+    expect(changed).toMatchObject({ targetWeight: 45, targetSets: 3, targetReps: 10 })
+    expect(changed.targetUpdatedAt! > created.targetUpdatedAt!).toBe(true)
+    await new Promise((r) => setTimeout(r, 5))
+    const notesOnly = await updateExercise(created.id, { ...bench, notes: 'agarre cerrado' })
+    expect(notesOnly).toMatchObject({ targetWeight: 45, targetUpdatedAt: changed.targetUpdatedAt })
+    const same = await updateExercise(created.id, { ...bench, targetWeight: 45, targetSets: 3, targetReps: 10 })
+    expect(same.targetUpdatedAt).toBe(changed.targetUpdatedAt)
+  })
+
+  test('without history the kind follows the weight; with history it stays', async () => {
+    const { kind: _kind, ...noKind } = bench
+    const created = await createExercise({ ...noKind, name: 'Máquina' })
+    expect(created.kind).toBe('bodyweight')
+    expect((await updateExercise(created.id, { ...noKind, name: 'Máquina', targetWeight: 30 })).kind).toBe('weighted')
+    await db.sessions.add(sessionWith(created.id))
+    expect((await updateExercise(created.id, { ...noKind, name: 'Máquina', targetWeight: null })).kind).toBe('weighted')
   })
 
   test('allows keeping its own name', async () => {

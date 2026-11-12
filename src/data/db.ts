@@ -14,6 +14,20 @@ export class GymTrackerDb extends Dexie {
       routines: 'id, name',
       sessions: 'id, startedAt, *exerciseIds',
     })
+    // v2: exercises get targets (not indexed). Existing ones start with none; nothing else changes.
+    this.version(2)
+      .stores({})
+      .upgrade((tx) =>
+        tx
+          .table('exercises')
+          .toCollection()
+          .modify((exercise: Partial<Exercise>) => {
+            exercise.targetWeight ??= null
+            exercise.targetSets ??= null
+            exercise.targetReps ??= null
+            exercise.targetUpdatedAt ??= null
+          }),
+      )
   }
 }
 

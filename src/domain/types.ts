@@ -13,6 +13,16 @@ export type Exercise = {
   defaultUnit: WeightUnit
   /** Fixed note shown every time, e.g. "seat on 4". Empty string when none. */
   notes: string
+  /*
+   * Targets (schema v2), all optional (null = none). Weight is in `defaultUnit` (bodyweight: added load).
+   * They are shown as a guide when training, and drive the first set's ghost while they are newer
+   * than the last workout with this exercise; otherwise "last time" does.
+   */
+  targetWeight: number | null
+  targetSets: number | null
+  targetReps: number | null
+  /** When the targets were last set (null = never). */
+  targetUpdatedAt: IsoDateTime | null
   /** Archived exercises are hidden from the catalog but kept for history. */
   archivedAt: IsoDateTime | null
   createdAt: IsoDateTime

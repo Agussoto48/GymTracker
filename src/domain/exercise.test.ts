@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import {
+  deduceKind,
   EXERCISE_NAME_MAX_LENGTH,
   compareByName,
   isDuplicateName,
@@ -33,12 +34,33 @@ describe('validateExercise', () => {
     const result = validateExercise({ ...valid, name: '  Press   banca ', notes: '  asiento en 4 ' })
     expect(result).toEqual({
       ok: true,
-      value: { name: 'Press banca', kind: 'weighted', defaultUnit: 'kg', notes: 'asiento en 4' },
+      value: {
+        name: 'Press banca',
+        kind: 'weighted',
+        defaultUnit: 'kg',
+        notes: 'asiento en 4',
+        targetWeight: null,
+        targetSets: null,
+        targetReps: null,
+      },
     })
   })
 
   test('accepts bodyweight exercises in lb', () => {
     expect(validateExercise({ ...valid, kind: 'bodyweight', defaultUnit: 'lb' }).ok).toBe(true)
+  })
+
+  test('keeps valid targets; missing or null means none', () => {
+    const withTargets = validateExercise({ ...valid, targetWeight: 62.5, targetSets: 3, targetReps: 10 })
+    expect(withTargets.ok && withTargets.value).toMatchObject({ targetWeight: 62.5, targetSets: 3, targetReps: 10 })
+    const missing = validateExercise({ ...valid })
+    expect(missing.ok && missing.value).toMatchObject({ targetWeight: null, targetSets: null, targetReps: null })
+  })
+
+  test('deduceKind: no target weight means bodyweight', () => {
+    expect(deduceKind(null)).toBe('bodyweight')
+    expect(deduceKind(0)).toBe('weighted')
+    expect(deduceKind(40)).toBe('weighted')
   })
 
   test('treats missing notes as empty', () => {
@@ -53,6 +75,15 @@ describe('validateExercise', () => {
     ['unknown kind', { kind: 'cardio' }, 'kind'],
     ['unknown unit', { defaultUnit: 'stone' }, 'defaultUnit'],
     ['non-string notes', { notes: 5 }, 'notes'],
+    ['negative target weight', { targetWeight: -5 }, 'targetWeight'],
+    ['target weight with 3 decimals', { targetWeight: 62.555 }, 'targetWeight'],
+    ['target weight too heavy', { targetWeight: 5000 }, 'targetWeight'],
+    ['non-number target weight', { targetWeight: '60' }, 'targetWeight'],
+    ['zero target sets', { targetSets: 0 }, 'targetSets'],
+    ['fractional target sets', { targetSets: 2.5 }, 'targetSets'],
+    ['too many target sets', { targetSets: 21 }, 'targetSets'],
+    ['zero target reps', { targetReps: 0 }, 'targetReps'],
+    ['NaN target reps', { targetReps: Number.NaN }, 'targetReps'],
   ])('rejects %s', (_label, patch, field) => {
     const result = validateExercise({ ...valid, ...patch })
     expect(result.ok).toBe(false)

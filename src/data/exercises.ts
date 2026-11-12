@@ -1,8 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
   compareByName,
+  deduceKind,
   isDuplicateName,
   validateExercise,
+  type ExerciseFields,
   type ExerciseInput,
 } from '../domain/exercise.ts'
 import type { Exercise, Id } from '../domain/types.ts'
@@ -18,8 +20,14 @@ function validOrThrow(input: ExerciseInput) {
   return result.value
 }
 
+/** Kind from the form's weight when the caller does not say it (empty weight = bodyweight). */
+const kindFromRawWeight = (raw: unknown) => deduceKind(raw === null || raw === undefined ? null : 0)
+
+const hasAnyTarget = (fields: Pick<ExerciseFields, 'targetWeight' | 'targetSets' | 'targetReps'>) =>
+  fields.targetWeight !== null || fields.targetSets !== null || fields.targetReps !== null
+
 export async function createExercise(input: ExerciseInput): Promise<Exercise> {
-  const fields = validOrThrow(input)
+  const fields = validOrThrow({ ...input, kind: input.kind ?? kindFromRawWeight(input.targetWeight) })
   return db.transaction('rw', db.exercises, async () => {
     if (isDuplicateName(fields.name, await db.exercises.toArray())) {
       throw new ValidationError({ name: 'Ya existe un ejercicio con ese nombre.' })
@@ -28,6 +36,7 @@ export async function createExercise(input: ExerciseInput): Promise<Exercise> {
     const exercise: Exercise = {
       id: createId(),
       ...fields,
+      targetUpdatedAt: hasAnyTarget(fields) ? timestamp : null,
       archivedAt: null,
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -37,19 +46,41 @@ export async function createExercise(input: ExerciseInput): Promise<Exercise> {
   })
 }
 
+/**
+ * Targets left out of `input` are kept (absent never means "clear"). Changing any target stamps
+ * `targetUpdatedAt`, so the next workout proposes them. Without history, the kind follows the weight.
+ */
 export async function updateExercise(id: Id, input: ExerciseInput): Promise<Exercise> {
-  const fields = validOrThrow(input)
   return db.transaction('rw', db.exercises, db.sessions, async () => {
     const current = await db.exercises.get(id)
     if (!current) throw new NotFoundError('Exercise', id)
+    const hasHistory = (await countSessionsWith(id)) > 0
+    const merged = {
+      ...input,
+      targetWeight: input.targetWeight === undefined ? current.targetWeight : input.targetWeight,
+      targetSets: input.targetSets === undefined ? current.targetSets : input.targetSets,
+      targetReps: input.targetReps === undefined ? current.targetReps : input.targetReps,
+    }
+    const kind = input.kind ?? (hasHistory ? current.kind : kindFromRawWeight(merged.targetWeight))
+    const fields = validOrThrow({ ...merged, kind })
     if (isDuplicateName(fields.name, await db.exercises.toArray(), id)) {
       throw new ValidationError({ name: 'Ya existe un ejercicio con ese nombre.' })
     }
     // Changing the kind would change the meaning of logged sets.
-    if (fields.kind !== current.kind && (await countSessionsWith(id)) > 0) {
+    if (fields.kind !== current.kind && hasHistory) {
       throw new ValidationError({ kind: 'No se puede cambiar: ya tiene historial.' })
     }
-    const updated: Exercise = { ...current, ...fields, updatedAt: now() }
+    const timestamp = now()
+    const targetsChanged =
+      fields.targetWeight !== current.targetWeight ||
+      fields.targetSets !== current.targetSets ||
+      fields.targetReps !== current.targetReps
+    const updated: Exercise = {
+      ...current,
+      ...fields,
+      targetUpdatedAt: targetsChanged ? timestamp : current.targetUpdatedAt,
+      updatedAt: timestamp,
+    }
     await db.exercises.put(updated)
     return updated
   })

@@ -1,5 +1,5 @@
 import { exerciseHistory } from './history.ts'
-import type { ExerciseKind, Id, Weight, WeightUnit, WorkoutSession, WorkoutSet } from './types.ts'
+import type { Exercise, ExerciseKind, Id, Weight, WeightUnit, WorkoutSession, WorkoutSet } from './types.ts'
 
 export const WEIGHT_MAX = 2000
 export const REPS_MAX = 200
@@ -97,21 +97,73 @@ export function findLastPerformance(
 
 export type SetSuggestion = {
   weight: Weight | null
-  reps: number
-  source: 'last-time' | 'previous-set'
+  /** null when only a target weight is known. */
+  reps: number | null
+  source: 'last-time' | 'previous-set' | 'target'
+}
+
+/** The exercise's target weight and reps, when they should drive the next workout. */
+export type ActiveTarget = { weight: Weight | null; reps: number | null }
+
+/**
+ * Targets drive the ghost when there is no history, or when they were set after the last workout
+ * with this exercise (the person changed them on purpose). Otherwise "last time" wins.
+ */
+export function activeTarget(
+  exercise: Pick<Exercise, 'kind' | 'defaultUnit' | 'targetWeight' | 'targetReps' | 'targetUpdatedAt'>,
+  lastTime: { startedAt: string } | null,
+): ActiveTarget | null {
+  // Bodyweight: a load of 0 is "no added load", so it does not count as a target weight.
+  const hasWeight = exercise.targetWeight !== null && (exercise.kind === 'weighted' || exercise.targetWeight > 0)
+  if (!hasWeight && exercise.targetReps === null) return null
+  if (lastTime && (exercise.targetUpdatedAt === null || exercise.targetUpdatedAt <= lastTime.startedAt)) return null
+  return {
+    weight: hasWeight ? { value: exercise.targetWeight as number, unit: exercise.defaultUnit } : null,
+    reps: exercise.targetReps,
+  }
+}
+
+export type TargetValues = { weight: number | null; sets: number | null; reps: number | null }
+
+/**
+ * What the exercise form shows: the targets when there is no history or they were set after the
+ * last workout; otherwise what was done last time (its last set). Sets are a plan, not a result:
+ * the target sets stay, and only without one does it show how many were done.
+ */
+export function latestTargets(
+  exercise: Pick<Exercise, 'kind' | 'defaultUnit' | 'targetWeight' | 'targetSets' | 'targetReps' | 'targetUpdatedAt'>,
+  lastTime: LastPerformance | null,
+): TargetValues {
+  const targets = { weight: exercise.targetWeight, sets: exercise.targetSets, reps: exercise.targetReps }
+  if (!lastTime || (exercise.targetUpdatedAt !== null && exercise.targetUpdatedAt > lastTime.startedAt)) return targets
+  const lastSet = lastTime.sets.at(-1)
+  const lastWeight = lastSet?.weight
+  // A weight logged in the other unit is not shown as if it were in this one.
+  const weight =
+    lastWeight && lastWeight.unit === exercise.defaultUnit && (exercise.kind === 'weighted' || lastWeight.value > 0)
+      ? lastWeight.value
+      : null
+  return { weight, sets: exercise.targetSets ?? lastTime.sets.length, reps: lastSet?.reps ?? null }
 }
 
 /**
- * The "ghost" for the next set: same set number from last time; if this session already has
- * more sets than last time, the previous set of this session. null when there is nothing to suggest.
+ * The "ghost" for the next set. With an active target, the first set proposes it (missing parts
+ * come from last time) and later sets repeat the previous one. Otherwise: same set number from
+ * last time, then the previous set of this session. null when there is nothing to suggest.
  */
 export function suggestNextSet(
   lastTimeSets: readonly WorkoutSet[],
   currentSets: readonly WorkoutSet[],
+  target: ActiveTarget | null = null,
 ): SetSuggestion | null {
+  const previous = currentSets.at(-1)
+  if (target) {
+    if (previous) return { weight: previous.weight, reps: previous.reps, source: 'previous-set' }
+    const first = lastTimeSets[0]
+    return { weight: target.weight ?? first?.weight ?? null, reps: target.reps ?? first?.reps ?? null, source: 'target' }
+  }
   const fromLastTime = lastTimeSets[currentSets.length]
   if (fromLastTime) return { weight: fromLastTime.weight, reps: fromLastTime.reps, source: 'last-time' }
-  const previous = currentSets.at(-1)
   if (previous) return { weight: previous.weight, reps: previous.reps, source: 'previous-set' }
   return null
 }
