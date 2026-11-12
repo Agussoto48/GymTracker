@@ -54,6 +54,25 @@ describe('parseBackup', () => {
     expect(result.data.sessions[0].exerciseIds).toEqual(['e1', 'e2'])
   })
 
+  test('backups without targets (older format) import as none; present ones are kept', () => {
+    const value = file()
+    Object.assign(value.data.exercises[1], { targetWeight: 10, targetSets: 3, targetReps: 8, targetUpdatedAt: t })
+    const result = parse(value)
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.data.exercises[0]).toMatchObject({ targetWeight: null, targetSets: null, targetReps: null, targetUpdatedAt: null })
+    expect(result.data.exercises[1]).toMatchObject({ targetWeight: 10, targetSets: 3, targetReps: 8, targetUpdatedAt: t })
+  })
+
+  test('rejects invalid targets', () => {
+    const value = file()
+    Object.assign(value.data.exercises[0], { targetWeight: -1 })
+    expect(firstError(value)).toMatch(/^Ejercicio 1: Peso entre 0/)
+    const badDate = file()
+    Object.assign(badDate.data.exercises[0], { targetUpdatedAt: 'ayer' })
+    expect(firstError(badDate)).toBe('Ejercicio 1: fechas inválidas.')
+  })
+
   test('drops unknown fields', () => {
     const value = file()
     Object.assign(value.data.exercises[0], { hacked: true })

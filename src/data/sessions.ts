@@ -196,8 +196,12 @@ export function useActiveSession(): WorkoutSession | null | undefined {
   return useLiveQuery(async () => (await getActiveSession()) ?? null)
 }
 
-export function useLastPerformance(exerciseId: Id, excludeSessionId: Id): LastPerformance | null | undefined {
-  return useLiveQuery(() => getLastPerformance(exerciseId, excludeSessionId), [exerciseId, excludeSessionId])
+/** `undefined` while loading, `null` when the exercise has no finished workout. */
+export function useLastPerformance(exerciseId: Id | null, excludeSessionId?: Id): LastPerformance | null | undefined {
+  return useLiveQuery(
+    async () => (exerciseId === null ? null : getLastPerformance(exerciseId, excludeSessionId)),
+    [exerciseId, excludeSessionId],
+  )
 }
 
 export function useFinishedSessions(): WorkoutSession[] | undefined {

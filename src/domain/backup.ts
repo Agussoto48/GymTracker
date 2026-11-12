@@ -98,16 +98,32 @@ function parseExercises(items: unknown[], fail: (m: string) => void): Exercise[]
     const where = `Ejercicio ${index + 1}`
     if (!isObject(item) || !isId(item.id)) return fail(`${where}: falta el identificador.`)
     if (result.some((e) => e.id === item.id)) return fail(`${where}: identificador repetido.`)
-    const checked = validateExercise({ name: item.name, kind: item.kind, defaultUnit: item.defaultUnit, notes: item.notes })
+    // Targets are optional: backups exported before schema v2 don't have them.
+    const checked = validateExercise({
+      name: item.name,
+      kind: item.kind,
+      defaultUnit: item.defaultUnit,
+      notes: item.notes,
+      targetWeight: item.targetWeight,
+      targetSets: item.targetSets,
+      targetReps: item.targetReps,
+    })
     if (!checked.ok) return fail(`${where}: ${Object.values(checked.errors)[0]}`)
     if (names.has(nameKey(checked.value.name))) return fail(`${where}: nombre repetido («${checked.value.name}»).`)
-    if (!isOptionalIsoDate(item.archivedAt) || !isIsoDate(item.createdAt) || !isIsoDate(item.updatedAt)) {
+    const targetUpdatedAt = item.targetUpdatedAt ?? null
+    if (
+      !isOptionalIsoDate(item.archivedAt) ||
+      !isIsoDate(item.createdAt) ||
+      !isIsoDate(item.updatedAt) ||
+      !isOptionalIsoDate(targetUpdatedAt)
+    ) {
       return fail(`${where}: fechas inválidas.`)
     }
     names.add(nameKey(checked.value.name))
     result.push({
       id: item.id,
       ...checked.value,
+      targetUpdatedAt,
       archivedAt: item.archivedAt,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,

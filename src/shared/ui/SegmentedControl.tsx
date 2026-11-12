@@ -10,6 +10,8 @@ type SegmentedControlProps<T extends string> = {
   onChange: (value: T) => void
   hint?: string
   error?: string
+  /** Keep the label for screen readers only, when the control sits beside the field it qualifies. */
+  hideLabel?: boolean
 }
 
 // Native radio buttons styled as segments: keyboard and screen reader support for free.
@@ -20,12 +22,13 @@ export function SegmentedControl<T extends string>({
   onChange,
   hint,
   error,
+  hideLabel = false,
 }: SegmentedControlProps<T>) {
   const name = useId()
   const describedBy = `${name}-desc`
   return (
     <fieldset className={styles.field} aria-describedby={hint || error ? describedBy : undefined}>
-      <legend className={styles.legend}>{label}</legend>
+      <legend className={hideLabel ? 'visually-hidden' : styles.legend}>{label}</legend>
       <div className={styles.segments}>
         {options.map((option) => (
           <label key={option.value} className={styles.segment}>

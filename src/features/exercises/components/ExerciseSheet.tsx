@@ -4,7 +4,8 @@ import {
   EXERCISE_NOTES_MAX_LENGTH,
   type ExerciseErrors,
 } from '../../../domain/exercise.ts'
-import type { Exercise, ExerciseKind, WeightUnit } from '../../../domain/types.ts'
+import type { Exercise, WeightUnit } from '../../../domain/types.ts'
+import { latestTargets, parseDecimal } from '../../../domain/workout.ts'
 import { ValidationError } from '../../../data/errors.ts'
 import {
   createExercise,
@@ -13,6 +14,8 @@ import {
   updateExercise,
   useExerciseInUse,
 } from '../../../data/exercises.ts'
+import { useLastPerformance } from '../../../data/sessions.ts'
+import { formatNumber, formatSet, formatShortDate } from '../../../shared/lib/format.ts'
 import { SegmentedControl } from '../../../shared/ui/SegmentedControl.tsx'
 import { useConfirm } from '../../../shared/ui/useConfirm.tsx'
 import { RowButton } from '../../../shared/ui/RowButton.tsx'
@@ -20,15 +23,12 @@ import { Sheet } from '../../../shared/ui/Sheet.tsx'
 import { TextField } from '../../../shared/ui/TextField.tsx'
 import styles from './ExerciseSheet.module.css'
 
-const KIND_OPTIONS = [
-  { value: 'weighted', label: 'Con peso' },
-  { value: 'bodyweight', label: 'Peso corporal' },
-] as const satisfies readonly { value: ExerciseKind; label: string }[]
-
 const UNIT_OPTIONS = [
   { value: 'kg', label: 'kg' },
   { value: 'lb', label: 'lb' },
 ] as const satisfies readonly { value: WeightUnit; label: string }[]
+
+const toText = (value: number | null) => (value === null ? '' : formatNumber(value))
 
 type ExerciseSheetProps = {
   /** null = create a new exercise. */
@@ -38,15 +38,31 @@ type ExerciseSheetProps = {
 
 export function ExerciseSheet({ exercise, onClose }: ExerciseSheetProps) {
   const formId = useId()
+  const targetsId = useId()
   const [name, setName] = useState(exercise?.name ?? '')
-  const [kind, setKind] = useState<ExerciseKind>(exercise?.kind ?? 'weighted')
   const [defaultUnit, setDefaultUnit] = useState<WeightUnit>(exercise?.defaultUnit ?? 'kg')
   const [notes, setNotes] = useState(exercise?.notes ?? '')
+  // undefined = untouched: the field shows the latest values and saving leaves the targets as they are.
+  const [weightText, setWeightText] = useState<string>()
+  const [setsText, setSetsText] = useState<string>()
+  const [repsText, setRepsText] = useState<string>()
   const [errors, setErrors] = useState<ExerciseErrors>({})
   const [formError, setFormError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const inUse = useExerciseInUse(exercise?.id ?? null)
+  const lastTime = useLastPerformance(exercise?.id ?? null)
   const [confirm, confirmSheet] = useConfirm()
+
+  // The latest values: targets, or what was done last time if that is newer (domain/workout.ts).
+  const latest = exercise && lastTime !== undefined ? latestTargets(exercise, lastTime) : null
+  const shown = {
+    weight: weightText ?? toText(latest?.weight ?? null),
+    sets: setsText ?? toText(latest?.sets ?? null),
+    reps: repsText ?? toText(latest?.reps ?? null),
+  }
+  const touched = weightText !== undefined || setsText !== undefined || repsText !== undefined
+  // Once there is history the kind is fixed: a bodyweight exercise's weight is added load.
+  const weightLabel = lastTime && exercise?.kind === 'bodyweight' ? 'Lastre (opcional)' : 'Peso (opcional)'
 
   async function run(action: () => Promise<unknown>) {
     setSaving(true)
@@ -64,7 +80,19 @@ export function ExerciseSheet({ exercise, onClose }: ExerciseSheetProps) {
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
-    const input = { name, kind, defaultUnit, notes }
+    const input = {
+      name,
+      defaultUnit,
+      notes,
+      // Only when edited: untouched targets are kept (see updateExercise). The kind is deduced there.
+      ...(touched || !exercise
+        ? {
+            targetWeight: parseDecimal(shown.weight),
+            targetSets: parseDecimal(shown.sets),
+            targetReps: parseDecimal(shown.reps),
+          }
+        : {}),
+    }
     void run(() => (exercise ? updateExercise(exercise.id, input) : createExercise(input)))
   }
 
@@ -79,12 +107,15 @@ export function ExerciseSheet({ exercise, onClose }: ExerciseSheetProps) {
     if (confirmed) void run(() => deleteExercise(exercise.id))
   }
 
+  const targetsError = errors.targetSets ?? errors.targetReps
+  const loading = exercise !== null && lastTime === undefined
+
   return (
     <Sheet
       title={exercise ? 'Editar ejercicio' : 'Nuevo ejercicio'}
       onClose={onClose}
       action={
-        <button type="submit" form={formId} className={styles.save} disabled={saving}>
+        <button type="submit" form={formId} className={styles.save} disabled={saving || loading}>
           Guardar
         </button>
       }
@@ -101,26 +132,76 @@ export function ExerciseSheet({ exercise, onClose }: ExerciseSheetProps) {
           enterKeyHint="done"
           placeholder="Ej.: Press banca"
         />
-        <SegmentedControl
-          label="Tipo"
-          value={kind}
-          options={KIND_OPTIONS}
-          onChange={setKind}
-          error={errors.kind}
-          hint={
-            kind === 'bodyweight'
-              ? 'En cada serie podrás anotar lastre (opcional). Verás siempre el más reciente.'
-              : 'El peso se anota en cada serie al entrenar. Verás siempre el más reciente, en todas tus rutinas.'
-          }
-        />
-        <SegmentedControl
-          label="Unidad por defecto"
-          value={defaultUnit}
-          options={UNIT_OPTIONS}
-          onChange={setDefaultUnit}
-          error={errors.defaultUnit}
-          hint="Podrás cambiarla en cada serie."
-        />
+
+        {lastTime && exercise && (
+          <div className={styles.lastTime}>
+            <p className={styles.lastTimeLabel}>Última vez · {formatShortDate(lastTime.startedAt)}</p>
+            <p className={`${styles.lastTimeSets} figures`}>
+              {lastTime.sets.map((set) => formatSet(set, exercise.kind)).join(' · ')}
+            </p>
+          </div>
+        )}
+
+        {!loading && (
+          <>
+            <TextField
+              label={weightLabel}
+              value={shown.weight}
+              onChange={(event) => setWeightText(event.target.value)}
+              error={errors.targetWeight ?? errors.defaultUnit ?? errors.kind}
+              inputMode="decimal"
+              autoComplete="off"
+              enterKeyHint="done"
+              placeholder="Ej.: 40"
+              hint={
+                lastTime
+                  ? undefined
+                  : 'Déjalo vacío solo si es de peso corporal (dominadas, fondos…). Si no lo sabes, pon uno aproximado.'
+              }
+              trailing={
+                <SegmentedControl label="Unidad" hideLabel value={defaultUnit} options={UNIT_OPTIONS} onChange={setDefaultUnit} />
+              }
+            />
+
+            <fieldset className={styles.targets} aria-describedby={`${targetsId}-desc`}>
+              <legend className={styles.targetsLegend}>Series × reps (opcional)</legend>
+              <div className={styles.targetsRow}>
+                <input
+                  className={`${styles.targetInput} figures`}
+                  aria-label="Series"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  enterKeyHint="done"
+                  placeholder="3"
+                  value={shown.sets}
+                  onChange={(event) => setSetsText(event.target.value)}
+                  aria-invalid={errors.targetSets ? true : undefined}
+                />
+                <span className={styles.times} aria-hidden="true">
+                  ×
+                </span>
+                <input
+                  className={`${styles.targetInput} figures`}
+                  aria-label="Reps"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  enterKeyHint="done"
+                  placeholder="10"
+                  value={shown.reps}
+                  onChange={(event) => setRepsText(event.target.value)}
+                  aria-invalid={errors.targetReps ? true : undefined}
+                />
+              </div>
+              <p id={`${targetsId}-desc`} className={targetsError ? styles.fieldError : styles.hint}>
+                {targetsError ??
+                  (lastTime
+                    ? 'Muestra lo último que hiciste. Si cambias peso, series o reps, tu próximo entrenamiento los propone.'
+                    : 'Tu objetivo: lo verás al entrenar y se propone en tu primera serie.')}
+              </p>
+            </fieldset>
+          </>
+        )}
+
         <TextField
           multiline
           label="Nota fija (opcional)"

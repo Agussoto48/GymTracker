@@ -5,6 +5,8 @@ import {
   isValidRpe,
   parseDecimal,
   stepWeight,
+  activeTarget,
+  latestTargets,
   suggestNextSet,
   validateSet,
   withDerivedExerciseIds,
@@ -125,6 +127,17 @@ describe('findLastPerformance', () => {
 describe('suggestNextSet', () => {
   const last = [set(60, 10), set(60, 9)]
 
+  test('an active target drives the first set, then the previous set is repeated', () => {
+    const target = { weight: { value: 65, unit: 'kg' as const }, reps: 8 }
+    expect(suggestNextSet(last, [], target)).toEqual({ weight: target.weight, reps: 8, source: 'target' })
+    expect(suggestNextSet(last, [set(65, 7)], target)).toMatchObject({ weight: { value: 65 }, reps: 7, source: 'previous-set' })
+  })
+
+  test('missing target parts come from last time; a weight-only target leaves reps empty without history', () => {
+    expect(suggestNextSet(last, [], { weight: null, reps: 12 })).toMatchObject({ weight: { value: 60 }, reps: 12 })
+    expect(suggestNextSet([], [], { weight: { value: 40, unit: 'kg' }, reps: null })).toMatchObject({ reps: null })
+  })
+
   test('uses the same set number from last time', () => {
     expect(suggestNextSet(last, [])).toMatchObject({ weight: { value: 60 }, reps: 10, source: 'last-time' })
     expect(suggestNextSet(last, [set(65, 8)])).toMatchObject({ reps: 9, source: 'last-time' })
@@ -140,5 +153,62 @@ describe('suggestNextSet', () => {
 
   test('returns null with no history and no sets', () => {
     expect(suggestNextSet([], [])).toBeNull()
+  })
+})
+
+describe('activeTarget', () => {
+  const exercise = {
+    kind: 'weighted' as const,
+    defaultUnit: 'kg' as const,
+    targetWeight: 40,
+    targetReps: 10,
+    targetUpdatedAt: '2026-11-10T12:00:00.000Z',
+  }
+
+  test('applies without history, or when set after the last workout', () => {
+    expect(activeTarget(exercise, null)).toEqual({ weight: { value: 40, unit: 'kg' }, reps: 10 })
+    expect(activeTarget(exercise, { startedAt: '2026-11-09T18:00:00.000Z' })).not.toBeNull()
+  })
+
+  test('last time wins when it is newer than the target', () => {
+    expect(activeTarget(exercise, { startedAt: '2026-11-11T18:00:00.000Z' })).toBeNull()
+  })
+
+  test('nothing to propose without target weight or reps; bodyweight load 0 is no weight', () => {
+    expect(activeTarget({ ...exercise, targetWeight: null, targetReps: null }, null)).toBeNull()
+    expect(activeTarget({ ...exercise, kind: 'bodyweight', targetWeight: 0, targetReps: null }, null)).toBeNull()
+  })
+})
+
+describe('latestTargets', () => {
+  const exercise = {
+    kind: 'weighted' as const,
+    defaultUnit: 'kg' as const,
+    targetWeight: 40,
+    targetSets: 3,
+    targetReps: 10,
+    targetUpdatedAt: '2026-11-01T12:00:00.000Z',
+  }
+  const lastTime = { sessionId: 's', startedAt: '2026-11-10T18:00:00.000Z', sets: [set(60, 10), set(62.5, 8)] }
+
+  test('without history, the targets', () => {
+    expect(latestTargets(exercise, null)).toEqual({ weight: 40, sets: 3, reps: 10 })
+  })
+
+  test('with a newer workout, the last set done; the target sets stay (a plan, not a result)', () => {
+    expect(latestTargets(exercise, lastTime)).toEqual({ weight: 62.5, sets: 3, reps: 8 })
+    expect(latestTargets({ ...exercise, targetSets: null }, lastTime).sets).toBe(2)
+  })
+
+  test('targets changed after the last workout win', () => {
+    expect(latestTargets({ ...exercise, targetUpdatedAt: '2026-11-11T09:00:00.000Z' }, lastTime)).toEqual({
+      weight: 40,
+      sets: 3,
+      reps: 10,
+    })
+  })
+
+  test('a last weight in the other unit is not shown as this unit', () => {
+    expect(latestTargets({ ...exercise, defaultUnit: 'lb' }, lastTime).weight).toBeNull()
   })
 })

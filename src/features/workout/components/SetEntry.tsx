@@ -124,7 +124,7 @@ export function SetEntry({ title, kind, defaultUnit, suggestion, initial, onSubm
             inputMode="numeric"
             autoComplete="off"
             value={repsText}
-            placeholder={suggestion ? String(suggestion.reps) : ''}
+            placeholder={suggestion?.reps == null ? '' : String(suggestion.reps)}
             onChange={(event) => setRepsText(event.target.value)}
             aria-invalid={errors.reps ? true : undefined}
           />
@@ -168,7 +168,11 @@ export function SetEntry({ title, kind, defaultUnit, suggestion, initial, onSubm
         {invalidNumber
           ? 'Número inválido'
           : !complete
-            ? 'Anota peso y reps'
+            ? reps === null && (kind === 'bodyweight' || weight !== null)
+              ? 'Anota las reps'
+              : reps !== null
+                ? 'Anota el peso'
+                : 'Anota peso y reps'
             : `${isRepeat ? 'Repetir' : 'Guardar'} ${summary}`}
       </button>
     </div>

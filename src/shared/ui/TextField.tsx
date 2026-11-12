@@ -1,10 +1,12 @@
-import { useId, type InputHTMLAttributes, type TextareaHTMLAttributes } from 'react'
+import { useId, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from 'react'
 import styles from './TextField.module.css'
 
 type CommonProps = {
   label: string
   hint?: string
   error?: string
+  /** Control shown beside a single-line input, e.g. a kg/lb selector for a weight. */
+  trailing?: ReactNode
 }
 
 type TextFieldProps = CommonProps &
@@ -13,7 +15,7 @@ type TextFieldProps = CommonProps &
     | ({ multiline: true } & TextareaHTMLAttributes<HTMLTextAreaElement>)
   )
 
-export function TextField({ label, hint, error, multiline, ...props }: TextFieldProps) {
+export function TextField({ label, hint, error, trailing, multiline, ...props }: TextFieldProps) {
   const id = useId()
   const descId = `${id}-desc`
   const a11y = {
@@ -31,7 +33,10 @@ export function TextField({ label, hint, error, multiline, ...props }: TextField
       {multiline ? (
         <textarea rows={3} {...a11y} {...(props as TextareaHTMLAttributes<HTMLTextAreaElement>)} />
       ) : (
-        <input type="text" {...a11y} {...(props as InputHTMLAttributes<HTMLInputElement>)} />
+        <div className={trailing ? styles.row : undefined}>
+          <input type="text" {...a11y} {...(props as InputHTMLAttributes<HTMLInputElement>)} />
+          {trailing}
+        </div>
       )}
       {(error || hint) && (
         <p id={descId} className={error ? styles.error : styles.hint}>

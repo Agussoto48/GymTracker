@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { count, formatDuration, formatMonth, formatSet } from './format.ts'
+import { count, formatDuration, formatMonth, formatSet, formatTarget } from './format.ts'
 
 describe('formatDuration', () => {
   test.each([
@@ -28,4 +28,12 @@ test('formatSet reads naturally for each kind', () => {
   expect(formatSet({ weight: null, reps: 8 }, 'bodyweight')).toBe('8 reps')
   expect(formatSet({ weight: { value: 0, unit: 'kg' }, reps: 8 }, 'bodyweight')).toBe('8 reps')
   expect(formatSet({ weight: { value: 10, unit: 'lb' }, reps: 6 }, 'bodyweight')).toBe('+10 lb × 6')
+})
+
+test('formatTarget shows only the parts that are set', () => {
+  const base = { sets: null, reps: null, weight: null, unit: 'kg' as const, kind: 'weighted' as const }
+  expect(formatTarget({ ...base, sets: 3, reps: 10, weight: 40 })).toBe('3 × 10 · 40 kg')
+  expect(formatTarget({ ...base, sets: 3 })).toBe('3 series')
+  expect(formatTarget({ ...base, reps: 8, weight: 5, kind: 'bodyweight' })).toBe('8 reps · +5 kg')
+  expect(formatTarget({ ...base, weight: 0, kind: 'bodyweight' })).toBe('')
 })
