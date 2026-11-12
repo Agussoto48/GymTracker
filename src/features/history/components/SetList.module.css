@@ -1,0 +1,33 @@
+.sets {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.set {
+  display: grid;
+  grid-template-columns: 2ch 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 40px;
+  padding: var(--space-1) 0;
+}
+
+.set + .set {
+  border-top: 1px solid var(--separator);
+}
+
+.number {
+  color: var(--label-2);
+  font-weight: 600;
+}
+
+.value {
+  font-size: var(--text-headline);
+  font-weight: 600;
+}
+
+.rpe {
+  color: var(--label-2);
+  font-size: var(--text-footnote);
+}
