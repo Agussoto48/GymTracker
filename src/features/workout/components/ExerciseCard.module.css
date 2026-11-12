@@ -27,10 +27,13 @@
 
 .card {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
   padding: var(--space-4);
   border-radius: var(--radius-card);
   background: var(--surface);
+  /* Room under the sheet header when the card scrolls into view. */
+  scroll-margin-top: var(--space-3);
 }
 
 .title {
@@ -47,8 +50,38 @@
 }
 
 .lastTime {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.lastTimeLabel {
   color: var(--label-2);
   font-size: var(--text-footnote);
+}
+
+.lastTimeSets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lastTimeSets li {
+  padding: 2px var(--space-2);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--label-2);
+  font-size: var(--text-footnote);
+  font-weight: 600;
+}
+
+/* The set the ghost repeats: accent-filled like the "Repetir" button it feeds, plus bold (not color alone). */
+.lastTimeSets .lastTimeCurrent {
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 700;
 }
 
 .sets {
@@ -94,19 +127,14 @@
   color: var(--label-2);
 }
 
-.remove,
-.deleteSet {
-  justify-self: start;
-  min-height: var(--tap);
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--danger);
-  font-size: var(--text-subhead);
-  cursor: pointer;
-}
 
 .editBody {
   display: grid;
   gap: var(--space-4);
+}
+
+.editCard {
+  padding: var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--surface);
 }

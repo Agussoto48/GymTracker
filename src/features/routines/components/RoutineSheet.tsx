@@ -10,6 +10,8 @@ import {
   useRoutineUsed,
 } from '../../../data/routines.ts'
 import { ExercisePicker } from '../../../shared/ui/ExercisePicker.tsx'
+import { useConfirm } from '../../../shared/ui/useConfirm.tsx'
+import { RowButton } from '../../../shared/ui/RowButton.tsx'
 import { Sheet } from '../../../shared/ui/Sheet.tsx'
 import { TextField } from '../../../shared/ui/TextField.tsx'
 import styles from './RoutineSheet.module.css'
@@ -30,6 +32,7 @@ export function RoutineSheet({ routine, exercises, onClose }: RoutineSheetProps)
   const [picking, setPicking] = useState(false)
   const [saving, setSaving] = useState(false)
   const used = useRoutineUsed(routine?.id ?? null)
+  const [confirm, confirmSheet] = useConfirm()
   const byId = new Map(exercises.map((e) => [e.id, e]))
 
   async function run(action: () => Promise<unknown>) {
@@ -52,10 +55,15 @@ export function RoutineSheet({ routine, exercises, onClose }: RoutineSheetProps)
     void run(() => (routine ? updateRoutine(routine.id, input) : createRoutine(input)))
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!routine) return
-    if (!window.confirm(`¿Eliminar la rutina «${routine.name}»? Tus ejercicios no se borran.`)) return
-    void run(() => deleteRoutine(routine.id))
+    const confirmed = await confirm({
+      title: `¿Eliminar la rutina «${routine.name}»?`,
+      message: 'Tus ejercicios no se borran.',
+      confirmLabel: 'Eliminar rutina',
+      destructive: true,
+    })
+    if (confirmed) void run(() => deleteRoutine(routine.id))
   }
 
   const move = (from: number, to: number) => setExerciseIds((ids) => moveItem(ids, from, to))
@@ -147,18 +155,16 @@ export function RoutineSheet({ routine, exercises, onClose }: RoutineSheetProps)
 
       {routine && (
         <div className={styles.manage}>
-          <button
-            type="button"
-            className={styles.manageButton}
+          <RowButton
             disabled={saving}
             onClick={() => void run(() => setRoutineArchived(routine.id, routine.archivedAt === null))}
           >
             {routine.archivedAt === null ? 'Archivar rutina' : 'Restaurar rutina'}
-          </button>
+          </RowButton>
           {used === false && (
-            <button type="button" className={`${styles.manageButton} ${styles.danger}`} disabled={saving} onClick={handleDelete}>
+            <RowButton tone="destructive" disabled={saving} onClick={() => void handleDelete()}>
               Eliminar rutina
-            </button>
+            </RowButton>
           )}
           {used && <p className={styles.hint}>Ya entrenaste con esta rutina: archívala para ocultarla sin perder el historial.</p>}
         </div>
@@ -173,6 +179,7 @@ export function RoutineSheet({ routine, exercises, onClose }: RoutineSheetProps)
           onPick={(exercise) => setExerciseIds((ids) => [...ids, exercise.id])}
         />
       )}
+      {confirmSheet}
     </Sheet>
   )
 }

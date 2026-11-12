@@ -9,11 +9,14 @@ type SheetProps = {
   onClose: () => void
   /** Trailing header action, usually the submit button of a form. */
   action?: ReactNode
+  /** Identifies the view shown inside the sheet; changing it scrolls the content back to the top. */
+  viewKey?: string
   children: ReactNode
 }
 
-export function Sheet({ title, closeLabel = 'Cancelar', onClose, action, children }: SheetProps) {
+export function Sheet({ title, closeLabel = 'Cancelar', onClose, action, viewKey, children }: SheetProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const bodyRef = useRef<HTMLDivElement>(null)
   const titleId = useId()
 
   useEffect(() => {
@@ -22,6 +25,10 @@ export function Sheet({ title, closeLabel = 'Cancelar', onClose, action, childre
     dialog.showModal()
     return () => dialog.close()
   }, [])
+
+  useEffect(() => {
+    bodyRef.current?.scrollTo({ top: 0 })
+  }, [viewKey])
 
   return (
     <dialog
@@ -42,7 +49,9 @@ export function Sheet({ title, closeLabel = 'Cancelar', onClose, action, childre
         </h2>
         <div className={styles.action}>{action}</div>
       </header>
-      <div className={styles.body}>{children}</div>
+      <div ref={bodyRef} className={styles.body}>
+        {children}
+      </div>
     </dialog>
   )
 }

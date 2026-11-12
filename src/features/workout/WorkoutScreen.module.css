@@ -12,6 +12,27 @@
   background: var(--surface);
 }
 
+.activeText {
+  display: grid;
+}
+
+.activeName {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.activeMeta {
+  color: var(--label-2);
+  font-size: var(--text-footnote);
+}
+
+/* Free workout: no section title; the button speaks for itself. */
+.start {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-8);
+}
+
 .routines {
   margin: 0;
   padding: 0;

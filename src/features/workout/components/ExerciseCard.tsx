@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Exercise, SessionExercise, WorkoutSet } from '../../../domain/types.ts'
 import { suggestNextSet, type SetInput } from '../../../domain/workout.ts'
 import {
@@ -9,7 +9,9 @@ import {
   updateSet,
   useLastPerformance,
 } from '../../../data/sessions.ts'
-import { formatNumber, formatSet, formatShortDate } from '../../../shared/lib/format.ts'
+import { count, formatNumber, formatSet, formatShortDate } from '../../../shared/lib/format.ts'
+import { useConfirm } from '../../../shared/ui/useConfirm.tsx'
+import { RowButton } from '../../../shared/ui/RowButton.tsx'
 import { Sheet } from '../../../shared/ui/Sheet.tsx'
 import { TextField } from '../../../shared/ui/TextField.tsx'
 import { SetEntry } from './SetEntry.tsx'
@@ -21,6 +23,8 @@ type ExerciseCardProps = {
   exercise: Exercise
   expanded: boolean
   onExpand: () => void
+  /** Bring the card's top under the sheet header when it opens (not on the sheet's first render). */
+  scrollOnExpand: boolean
 }
 
 const toInput = (set: WorkoutSet, fallbackUnit: Exercise['defaultUnit']): SetInput => ({
@@ -30,10 +34,23 @@ const toInput = (set: WorkoutSet, fallbackUnit: Exercise['defaultUnit']): SetInp
   rpe: set.rpe,
 })
 
-export function ExerciseCard({ sessionId, entry, exercise, expanded, onExpand }: ExerciseCardProps) {
+export function ExerciseCard({ sessionId, entry, exercise, expanded, onExpand, scrollOnExpand }: ExerciseCardProps) {
   const lastTime = useLastPerformance(exercise.id, sessionId)
   const [editing, setEditing] = useState<{ set: WorkoutSet; index: number } | null>(null)
   const [notes, setNotes] = useState(entry.notes)
+  const [confirm, confirmSheet] = useConfirm()
+  const cardRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const card = cardRef.current
+    if (!expanded || !scrollOnExpand || !card) return
+    // Leave it alone if its title is already visible in the upper half, under the sheet header.
+    const headerBottom = card.closest('dialog')?.querySelector('header')?.getBoundingClientRect().bottom ?? 0
+    const top = card.getBoundingClientRect().top
+    if (top >= headerBottom && top <= headerBottom + (window.innerHeight - headerBottom) / 2) return
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    card.scrollIntoView({ block: 'start', inline: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' })
+  }, [expanded, scrollOnExpand])
 
   if (!expanded) {
     const lastSet = entry.sets.at(-1)
@@ -51,27 +68,50 @@ export function ExerciseCard({ sessionId, entry, exercise, expanded, onExpand }:
 
   const suggestion = suggestNextSet(lastTime?.sets ?? [], entry.sets)
 
-  function remove() {
-    if (entry.sets.length > 0 && !window.confirm(`¿Quitar «${exercise.name}» y sus ${entry.sets.length} series?`)) return
-    void removeExerciseFromSession(sessionId, exercise.id)
+  async function remove() {
+    if (entry.sets.length > 0) {
+      const confirmed = await confirm({
+        title: `¿Quitar «${exercise.name}»?`,
+        message: `Se borrarán sus ${count(entry.sets.length, 'serie', 'series')} de hoy.`,
+        confirmLabel: 'Quitar ejercicio',
+        destructive: true,
+      })
+      if (!confirmed) return
+    }
+    await removeExerciseFromSession(sessionId, exercise.id)
   }
 
   return (
-    <section className={styles.card} aria-labelledby={`ex-${exercise.id}`}>
+    <section ref={cardRef} className={styles.card} aria-labelledby={`ex-${exercise.id}`}>
       <h3 id={`ex-${exercise.id}`} className={styles.title}>
         {exercise.name}
       </h3>
       {exercise.notes && <p className={styles.fixedNote}>{exercise.notes}</p>}
-      <p className={`${styles.lastTime} figures`}>
-        {lastTime === undefined
-          ? ' '
-          : lastTime
-            ? `Última vez · ${formatShortDate(lastTime.startedAt)}: ${lastTime.sets.map((s) => formatSet(s, exercise.kind)).join(' · ')}`
-            : 'Primera vez con este ejercicio.'}
-      </p>
+      {lastTime ? (
+        <div className={styles.lastTime}>
+          <p className={styles.lastTimeLabel}>Última vez · {formatShortDate(lastTime.startedAt)}</p>
+          {/* The highlighted set is the one the ghost below repeats. */}
+          <ol className={`${styles.lastTimeSets} figures`} aria-label="Series de la última vez">
+            {lastTime.sets.map((set, index) => {
+              const current = index === entry.sets.length
+              return (
+                <li
+                  key={set.id}
+                  className={current ? styles.lastTimeCurrent : undefined}
+                  aria-current={current ? 'step' : undefined}
+                >
+                  {formatSet(set, exercise.kind)}
+                </li>
+              )
+            })}
+          </ol>
+        </div>
+      ) : (
+        <p className={styles.lastTimeLabel}>{lastTime === null ? 'Primera vez con este ejercicio.' : ' '}</p>
+      )}
 
       {entry.sets.length > 0 && (
-        <ol className={styles.sets}>
+        <ol className={styles.sets} aria-label="Series de hoy">
           {entry.sets.map((set, index) => (
             <li key={set.id}>
               <button
@@ -114,37 +154,39 @@ export function ExerciseCard({ sessionId, entry, exercise, expanded, onExpand }:
         maxLength={500}
       />
 
-      <button type="button" className={styles.remove} onClick={remove}>
+      <RowButton tone="destructive" onClick={() => void remove()}>
         Quitar ejercicio
-      </button>
+      </RowButton>
 
       {editing && (
         <Sheet title={`Editar serie ${editing.index + 1}`} onClose={() => setEditing(null)}>
           <div className={styles.editBody}>
-            <SetEntry
-              title={exercise.name}
-              kind={exercise.kind}
-              defaultUnit={exercise.defaultUnit}
-              suggestion={null}
-              initial={toInput(editing.set, exercise.defaultUnit)}
-              onSubmit={async (input) => {
-                await updateSet(sessionId, exercise.id, editing.set.id, input)
-                setEditing(null)
-              }}
-            />
-            <button
-              type="button"
-              className={styles.deleteSet}
+            <div className={styles.editCard}>
+              <SetEntry
+                title={exercise.name}
+                kind={exercise.kind}
+                defaultUnit={exercise.defaultUnit}
+                suggestion={null}
+                initial={toInput(editing.set, exercise.defaultUnit)}
+                onSubmit={async (input) => {
+                  await updateSet(sessionId, exercise.id, editing.set.id, input)
+                  setEditing(null)
+                }}
+              />
+            </div>
+            <RowButton
+              tone="destructive"
               onClick={async () => {
                 await deleteSet(sessionId, exercise.id, editing.set.id)
                 setEditing(null)
               }}
             >
               Eliminar serie
-            </button>
+            </RowButton>
           </div>
         </Sheet>
       )}
+      {confirmSheet}
     </section>
   )
 }

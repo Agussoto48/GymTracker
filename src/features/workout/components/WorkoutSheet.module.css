@@ -1,4 +1,4 @@
-/* Plain, not amber: logging a set is the primary action while training. */
+/* Plain, not accent-filled: logging a set is the primary action while training. */
 .finish {
   min-height: var(--tap);
   padding: 0 var(--space-2);
@@ -40,12 +40,5 @@
 }
 
 .discard {
-  display: block;
-  min-height: var(--tap);
-  margin: var(--space-8) auto 0;
-  border: 0;
-  background: none;
-  color: var(--danger);
-  font-size: var(--text-subhead);
-  cursor: pointer;
+  margin-top: var(--space-8);
 }

@@ -4,13 +4,15 @@ import type { Id } from '../../domain/types.ts'
 import { useExercises } from '../../data/exercises.ts'
 import { useRoutines } from '../../data/routines.ts'
 import { useFinishedSessions } from '../../data/sessions.ts'
-import { formatMonth, formatShortDate, formatTime } from '../../shared/lib/format.ts'
+import { formatMonth, formatShortDate } from '../../shared/lib/format.ts'
+import { Button } from '../../shared/ui/Button.tsx'
 import { EmptyState } from '../../shared/ui/EmptyState.tsx'
 import { ScreenHeader } from '../../shared/ui/ScreenHeader.tsx'
 import { Section } from '../../shared/ui/Section.tsx'
-import { BackupSection } from './components/BackupSection.tsx'
+import { BackupSheet } from './components/BackupSheet.tsx'
 import { SessionList } from './components/SessionList.tsx'
 import { SessionSheet } from './components/SessionSheet.tsx'
+import { useBackupStatus } from './hooks/useBackupStatus.ts'
 import styles from './HistoryScreen.module.css'
 
 export function HistoryScreen() {
@@ -18,6 +20,8 @@ export function HistoryScreen() {
   const exercises = useExercises()
   const routines = useRoutines()
   const [selectedId, setSelectedId] = useState<Id | null>(null)
+  const [backupOpen, setBackupOpen] = useState(false)
+  const backup = useBackupStatus()
 
   const groups = useMemo(() => groupByMonth(sessions ?? []), [sessions])
   const exerciseById = useMemo(() => new Map(exercises?.map((e) => [e.id, e])), [exercises])
@@ -27,7 +31,24 @@ export function HistoryScreen() {
 
   return (
     <>
-      <ScreenHeader title="Historial" />
+      <ScreenHeader title="Historial" action={<Button onClick={() => setBackupOpen(true)}>Respaldo</Button>} />
+
+      {backup.stale && (
+        <button type="button" className={styles.reminder} onClick={() => setBackupOpen(true)}>
+          <span className={styles.reminderText}>
+            <span className={styles.reminderTitle}>Haz un respaldo</span>
+            <span className={styles.reminderMeta}>
+              {backup.lastExportAt
+                ? `El último es del ${formatShortDate(backup.lastExportAt)}.`
+                : 'Aún no has exportado ninguno.'}{' '}
+              Tus datos solo están en este iPhone.
+            </span>
+          </span>
+          <span className={styles.reminderAction} aria-hidden="true">
+            Exportar ›
+          </span>
+        </button>
+      )}
 
       {sessions?.length === 0 && (
         <Section title="Entrenamientos">
@@ -44,11 +65,8 @@ export function HistoryScreen() {
         </Section>
       ))}
 
-      <BackupSection />
 
-      <p className={`${styles.version} figures`}>
-        Versión del {formatShortDate(__APP_BUILD_TIME__)}, {formatTime(__APP_BUILD_TIME__)}
-      </p>
+      {backupOpen && <BackupSheet status={backup} onClose={() => setBackupOpen(false)} />}
 
       {selected && exercises && (
         <SessionSheet
