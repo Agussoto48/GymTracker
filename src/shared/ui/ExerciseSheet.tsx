@@ -33,13 +33,18 @@ const toText = (value: number | null) => (value === null ? '' : formatNumber(val
 type ExerciseSheetProps = {
   /** null = create a new exercise. */
   exercise: Exercise | null
+  /** Prefills the name when creating (e.g. what was typed in a search). */
+  initialName?: string
   onClose: () => void
+  /** Called with the new exercise right after it is saved, instead of onClose. */
+  onCreated?: (exercise: Exercise) => void
 }
 
-export function ExerciseSheet({ exercise, onClose }: ExerciseSheetProps) {
+/** Create or edit an exercise. Shared: the Ejercicios tab and the exercise picker both open it. */
+export function ExerciseSheet({ exercise, initialName = '', onClose, onCreated }: ExerciseSheetProps) {
   const formId = useId()
   const targetsId = useId()
-  const [name, setName] = useState(exercise?.name ?? '')
+  const [name, setName] = useState(exercise?.name ?? initialName)
   const [defaultUnit, setDefaultUnit] = useState<WeightUnit>(exercise?.defaultUnit ?? 'kg')
   const [notes, setNotes] = useState(exercise?.notes ?? '')
   // undefined = untouched: the field shows the latest values and saving leaves the targets as they are.
@@ -64,12 +69,11 @@ export function ExerciseSheet({ exercise, onClose }: ExerciseSheetProps) {
   // Once there is history the kind is fixed: a bodyweight exercise's weight is added load.
   const weightLabel = lastTime && exercise?.kind === 'bodyweight' ? 'Lastre (opcional)' : 'Peso (opcional)'
 
-  async function run(action: () => Promise<unknown>) {
+  async function run<T>(action: () => Promise<T>, onDone: (result: T) => void = onClose) {
     setSaving(true)
     setFormError(null)
     try {
-      await action()
-      onClose()
+      onDone(await action())
     } catch (error) {
       if (error instanceof ValidationError) setErrors(error.errors)
       else setFormError('No se pudo guardar. Intenta de nuevo.')
@@ -93,7 +97,8 @@ export function ExerciseSheet({ exercise, onClose }: ExerciseSheetProps) {
           }
         : {}),
     }
-    void run(() => (exercise ? updateExercise(exercise.id, input) : createExercise(input)))
+    if (exercise) void run(() => updateExercise(exercise.id, input))
+    else void run(() => createExercise(input), onCreated ?? onClose)
   }
 
   async function handleDelete() {
