@@ -29,8 +29,10 @@
   font-weight: 600;
 }
 
+/* Not amber: accent color is reserved for things you can tap. */
 .current {
-  color: var(--accent-text);
+  color: var(--label);
+  font-weight: 700;
 }
 
 .sets {
