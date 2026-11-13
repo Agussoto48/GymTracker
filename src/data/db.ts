@@ -1,6 +1,15 @@
 import { Dexie, type EntityTable } from 'dexie'
 import type { Exercise, Routine, WorkoutSession } from '../domain/types.ts'
 
+/** Exercises without targets (written before v2) get empty ones: absent never reaches the app as undefined. */
+function withTargets(exercise: Partial<Exercise>) {
+  exercise.targetWeight ??= null
+  exercise.targetSets ??= null
+  exercise.targetReps ??= null
+  exercise.targetUpdatedAt ??= null
+  return exercise
+}
+
 // Only this folder may import Dexie (ADR-0002). Schema changes need a new version + upgrade (ADR-0003).
 export class GymTrackerDb extends Dexie {
   exercises!: EntityTable<Exercise, 'id'>
@@ -22,12 +31,12 @@ export class GymTrackerDb extends Dexie {
           .table('exercises')
           .toCollection()
           .modify((exercise: Partial<Exercise>) => {
-            exercise.targetWeight ??= null
-            exercise.targetSets ??= null
-            exercise.targetReps ??= null
-            exercise.targetUpdatedAt ??= null
+            withTargets(exercise)
           }),
       )
+    // A tab still running a pre-v2 build can keep writing exercises without targets after the upgrade.
+    // bulkGet also passes undefined for missing ids.
+    this.exercises.hook('reading', (exercise?: Exercise) => (exercise ? (withTargets(exercise) as Exercise) : exercise))
   }
 }
 

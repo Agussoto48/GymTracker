@@ -49,3 +49,14 @@ test('upgrading a v1 database keeps every record and gives exercises empty targe
   expect(await db.routines.get('r1')).toEqual(routine)
   expect(await db.sessions.get('s1')).toEqual(session)
 })
+
+test('an exercise written without targets (by an older build) reads with empty targets', async () => {
+  // Bypass the app's writes, like a pre-v2 tab writing into the upgraded database.
+  const raw = { id: 'old', name: 'Hola', kind: 'weighted', defaultUnit: 'kg', notes: '', archivedAt: null, createdAt: t, updatedAt: t }
+  await db.table('exercises').add(raw)
+
+  const expected = { ...raw, targetWeight: null, targetSets: null, targetReps: null, targetUpdatedAt: null }
+  expect(await db.exercises.get('old')).toEqual(expected)
+  expect((await db.exercises.toArray()).find((e) => e.id === 'old')).toEqual(expected)
+  expect(await db.exercises.bulkGet(['old'])).toEqual([expected])
+})
