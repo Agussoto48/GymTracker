@@ -20,7 +20,7 @@ function sessionWith(exerciseId: string): WorkoutSession {
     routineId: null,
     startedAt: new Date().toISOString(),
     finishedAt: null,
-    exercises: [{ exerciseId, notes: '', sets: [] }],
+    exercises: [{ exerciseId, notes: '', sets: [], finishedAt: null }],
     exerciseIds: [exerciseId],
   }
 }

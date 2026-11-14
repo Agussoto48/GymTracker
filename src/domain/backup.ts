@@ -5,6 +5,7 @@ import type { Exercise, Routine, SessionExercise, WorkoutSession, WorkoutSet } f
 import { SESSION_NOTES_MAX_LENGTH, validateSet, withDerivedExerciseIds } from './workout.ts'
 
 // Backup file format (ADR-0003). Bump FORMAT_VERSION when the shape changes and keep reading old ones.
+// Optional additions that older builds can ignore (an exercise's `finishedAt`) keep the version.
 export const BACKUP_APP = 'gymtracker'
 export const BACKUP_FORMAT_VERSION = 1
 const MAX_ERRORS = 10
@@ -193,6 +194,9 @@ function parseSessions(
         return fail(`${at}: nota inválida.`)
       }
       if (!Array.isArray(rawEntry.sets)) return fail(`${at}: lista de series inválida.`)
+      // Absent in backups made before schema v3.
+      const finishedAt = rawEntry.finishedAt ?? null
+      if (!isOptionalIsoDate(finishedAt)) return fail(`${at}: fecha de finalizado inválida.`)
 
       const sets: WorkoutSet[] = []
       for (const [n, rawSet] of rawEntry.sets.entries()) {
@@ -216,7 +220,8 @@ function parseSessions(
         setIds.add(rawSet.id)
         sets.push({ id: rawSet.id, ...checked.value, completedAt: rawSet.completedAt })
       }
-      entries.push({ exerciseId: exercise.id, notes: rawEntry.notes, sets })
+      // Finished needs a set (domain/workout.ts › canFinishExercise); without one it is just pending.
+      entries.push({ exerciseId: exercise.id, notes: rawEntry.notes, sets, finishedAt: sets.length > 0 ? finishedAt : null })
     }
 
     result.push(

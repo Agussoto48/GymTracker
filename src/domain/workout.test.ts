@@ -1,7 +1,10 @@
 import { describe, expect, test } from 'vitest'
-import type { WorkoutSession, WorkoutSet } from './types.ts'
+import type { SessionExercise, WorkoutSession, WorkoutSet } from './types.ts'
 import {
+  canFinishExercise,
+  exerciseToOpen,
   findLastPerformance,
+  splitFinished,
   isValidRpe,
   parseDecimal,
   stepWeight,
@@ -26,7 +29,7 @@ function session(id: string, startedAt: string, finished: boolean, sets: Workout
     routineId: null,
     startedAt,
     finishedAt: finished ? startedAt : null,
-    exercises: [{ exerciseId, notes: '', sets }],
+    exercises: [{ exerciseId, notes: '', sets, finishedAt: null }],
     exerciseIds: [],
   })
 }
@@ -210,5 +213,41 @@ describe('latestTargets', () => {
 
   test('a last weight in the other unit is not shown as this unit', () => {
     expect(latestTargets({ ...exercise, defaultUnit: 'lb' }, lastTime).weight).toBeNull()
+  })
+})
+
+const entry = (exerciseId: string, sets: number, finishedAt: string | null = null): SessionExercise => ({
+  exerciseId,
+  notes: '',
+  sets: Array.from({ length: sets }, (_, i) => set(60, 10 + i)),
+  finishedAt,
+})
+
+describe('finishing exercises', () => {
+  test('only an exercise with sets can be finished', () => {
+    expect(canFinishExercise(entry('a', 0))).toBe(false)
+    expect(canFinishExercise(entry('a', 1))).toBe(true)
+  })
+
+  test('finished exercises go last, in the order they were finished', () => {
+    const exercises = [
+      entry('a', 2, '2026-11-14T18:30:00.000Z'),
+      entry('b', 1),
+      entry('c', 3, '2026-11-14T18:10:00.000Z'),
+      entry('d', 0),
+    ]
+    const { pending, finished } = splitFinished(exercises)
+    expect(pending.map((e) => e.exerciseId)).toEqual(['b', 'd'])
+    expect(finished.map((e) => e.exerciseId)).toEqual(['c', 'a'])
+  })
+
+  test('opens the first pending exercise without sets, else the last pending one', () => {
+    expect(exerciseToOpen([entry('a', 2), entry('b', 0), entry('c', 0)])).toBe('b')
+    expect(exerciseToOpen([entry('a', 2, '2026-11-14T18:10:00.000Z'), entry('b', 1), entry('c', 3)])).toBe('c')
+  })
+
+  test('opens nothing when every exercise is finished or there are none', () => {
+    expect(exerciseToOpen([entry('a', 2, '2026-11-14T18:10:00.000Z')])).toBeNull()
+    expect(exerciseToOpen([])).toBeNull()
   })
 })

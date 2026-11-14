@@ -29,7 +29,7 @@ function file(patch: Record<string, unknown> = {}) {
           finishedAt: '2026-11-10T19:00:00.000Z',
           exerciseIds: ['ignored'],
           exercises: [
-            { exerciseId: 'e1', notes: '', sets: [{ id: 'x1', weight: { value: 60, unit: 'kg' }, reps: 8, rpe: 8, completedAt: t }] },
+            { exerciseId: 'e1', notes: '', sets: [{ id: 'x1', weight: { value: 60, unit: 'kg' }, reps: 8, rpe: 8, completedAt: t }], finishedAt: t },
             { exerciseId: 'e2', notes: 'bien', sets: [{ id: 'x2', weight: null, reps: 10, rpe: null, completedAt: t }] },
           ],
         },
@@ -62,6 +62,24 @@ describe('parseBackup', () => {
     if (!result.ok) return
     expect(result.data.exercises[0]).toMatchObject({ targetWeight: null, targetSets: null, targetReps: null, targetUpdatedAt: null })
     expect(result.data.exercises[1]).toMatchObject({ targetWeight: 10, targetSets: 3, targetReps: 8, targetUpdatedAt: t })
+  })
+
+  test('finished exercises keep their date; older backups without it import as pending', () => {
+    const result = parse(file())
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.data.sessions[0].exercises.map((e) => e.finishedAt)).toEqual([t, null])
+  })
+
+  test('an exercise marked finished without sets imports as pending; a bad date is rejected', () => {
+    const empty = file()
+    Object.assign(empty.data.sessions[0].exercises[1], { sets: [], finishedAt: t })
+    const result = parse(empty)
+    expect(result.ok && result.data.sessions[0].exercises[1].finishedAt).toBeNull()
+
+    const badDate = file()
+    Object.assign(badDate.data.sessions[0].exercises[0], { finishedAt: 'ayer' })
+    expect(firstError(badDate)).toBe('Entrenamiento 1, ejercicio 1: fecha de finalizado inválida.')
   })
 
   test('rejects invalid targets', () => {

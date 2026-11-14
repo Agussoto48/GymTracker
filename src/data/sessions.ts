@@ -3,6 +3,7 @@ import { exerciseHistory, type ExerciseHistoryEntry } from '../domain/history.ts
 import type { Id, WorkoutSession, WorkoutSet } from '../domain/types.ts'
 import {
   SESSION_NOTES_MAX_LENGTH,
+  canFinishExercise,
   findLastPerformance,
   validateSet,
   withDerivedExerciseIds,
@@ -46,7 +47,7 @@ export async function startSession(routineId: Id | null = null): Promise<Workout
       routineId,
       startedAt: now(),
       finishedAt: null,
-      exercises: exerciseIds.map((exerciseId) => ({ exerciseId, notes: '', sets: [] })),
+      exercises: exerciseIds.map((exerciseId) => ({ exerciseId, notes: '', sets: [], finishedAt: null })),
       exerciseIds: [],
     })
     await db.sessions.add(session)
@@ -88,7 +89,7 @@ export async function addExerciseToSession(sessionId: Id, exerciseId: Id): Promi
   if (!exercise) throw new NotFoundError('Exercise', exerciseId)
   return changeActiveSession(sessionId, (session) => {
     if (session.exercises.some((e) => e.exerciseId === exerciseId)) return session
-    return { ...session, exercises: [...session.exercises, { exerciseId, notes: '', sets: [] }] }
+    return { ...session, exercises: [...session.exercises, { exerciseId, notes: '', sets: [], finishedAt: null }] }
   })
 }
 
@@ -127,9 +128,30 @@ export async function updateSet(sessionId: Id, exerciseId: Id, setId: Id, input:
   )
 }
 
+/** Deleting the last set of a finished exercise makes it pending again (finished needs a set). */
 export async function deleteSet(sessionId: Id, exerciseId: Id, setId: Id): Promise<void> {
   await changeActiveSession(sessionId, (session) =>
-    updateEntry(session, exerciseId, (entry) => ({ ...entry, sets: entry.sets.filter((s) => s.id !== setId) })),
+    updateEntry(session, exerciseId, (entry) => {
+      const sets = entry.sets.filter((s) => s.id !== setId)
+      return { ...entry, sets, finishedAt: canFinishExercise({ sets }) ? entry.finishedAt : null }
+    }),
+  )
+}
+
+/** Marks an exercise as done in this workout: it moves to the end. Refuses one without sets. */
+export async function finishExercise(sessionId: Id, exerciseId: Id): Promise<WorkoutSession> {
+  return changeActiveSession(sessionId, (session) =>
+    updateEntry(session, exerciseId, (entry) => {
+      if (!canFinishExercise(entry)) throw new Error('Cannot finish an exercise without sets.')
+      return { ...entry, finishedAt: entry.finishedAt ?? now() }
+    }),
+  )
+}
+
+/** Back to pending, in its original place in the workout. */
+export async function reopenExercise(sessionId: Id, exerciseId: Id): Promise<WorkoutSession> {
+  return changeActiveSession(sessionId, (session) =>
+    updateEntry(session, exerciseId, (entry) => ({ ...entry, finishedAt: null })),
   )
 }
 

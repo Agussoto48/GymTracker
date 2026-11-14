@@ -1,5 +1,5 @@
 import { exerciseHistory } from './history.ts'
-import type { Exercise, ExerciseKind, Id, Weight, WeightUnit, WorkoutSession, WorkoutSet } from './types.ts'
+import type { Exercise, ExerciseKind, Id, SessionExercise, Weight, WeightUnit, WorkoutSession, WorkoutSet } from './types.ts'
 
 export const WEIGHT_MAX = 2000
 export const REPS_MAX = 200
@@ -171,4 +171,27 @@ export function suggestNextSet(
 /** Keeps the indexed `exerciseIds` in sync with `exercises` (ADR-0003). */
 export function withDerivedExerciseIds(session: WorkoutSession): WorkoutSession {
   return { ...session, exerciseIds: session.exercises.map((e) => e.exerciseId) }
+}
+
+/** An exercise can be marked as done only once it has a set: skipping one is "remove", not "finish". */
+export function canFinishExercise(entry: Pick<SessionExercise, 'sets'>): boolean {
+  return entry.sets.length > 0
+}
+
+/** Pending exercises keep the workout's order; finished ones go last, in the order they were finished. */
+export function splitFinished(exercises: readonly SessionExercise[]): {
+  pending: SessionExercise[]
+  finished: SessionExercise[]
+} {
+  const pending = exercises.filter((e) => e.finishedAt === null)
+  const finished = exercises
+    .filter((e) => e.finishedAt !== null)
+    .sort((a, b) => (a.finishedAt as string).localeCompare(b.finishedAt as string))
+  return { pending, finished }
+}
+
+/** The card to open: the first pending exercise without sets, else the last pending one; none if all are done. */
+export function exerciseToOpen(exercises: readonly SessionExercise[]): Id | null {
+  const { pending } = splitFinished(exercises)
+  return (pending.find((e) => e.sets.length === 0) ?? pending.at(-1))?.exerciseId ?? null
 }

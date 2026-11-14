@@ -55,6 +55,11 @@ export type SessionExercise = {
   /** Note for this session only. Empty string when none. */
   notes: string
   sets: WorkoutSet[]
+  /**
+   * Schema v3. When the person marked the exercise as done in this workout (null = pending).
+   * Only with at least one set; it moves to the end of the workout and can be reopened.
+   */
+  finishedAt: IsoDateTime | null
 }
 
 export type WorkoutSession = {

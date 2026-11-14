@@ -11,12 +11,14 @@ import {
   deleteFinishedSession,
   deleteSet,
   discardSession,
+  finishExercise,
   finishSession,
   getActiveSession,
   getExerciseHistory,
   getLastPerformance,
   listFinishedSessions,
   removeExerciseFromSession,
+  reopenExercise,
   setSessionExerciseNotes,
   startSession,
   updateSet,
@@ -121,6 +123,47 @@ describe('exercises and sets', () => {
     await addExerciseToSession(session.id, pec.id)
     await setSessionExerciseNotes(session.id, pec.id, '  molestia en el hombro ')
     expect((await db.sessions.get(session.id))?.exercises[0].notes).toBe('molestia en el hombro')
+  })
+})
+
+describe('finishing an exercise', () => {
+  test('marks it as done and reopening makes it pending again', async () => {
+    const session = await startSession()
+    await addExerciseToSession(session.id, pec.id)
+    await addSet(session.id, pec.id, kg(60, 10))
+    const finished = await finishExercise(session.id, pec.id)
+    expect(finished.exercises[0].finishedAt).not.toBeNull()
+    const reopened = await reopenExercise(session.id, pec.id)
+    expect(reopened.exercises[0].finishedAt).toBeNull()
+  })
+
+  test('refuses an exercise without sets', async () => {
+    const session = await startSession()
+    await addExerciseToSession(session.id, pec.id)
+    await expect(finishExercise(session.id, pec.id)).rejects.toThrow()
+    expect((await db.sessions.get(session.id))?.exercises[0].finishedAt).toBeNull()
+  })
+
+  test('deleting its last set makes it pending; other sets keep it finished', async () => {
+    const session = await startSession()
+    await addExerciseToSession(session.id, pec.id)
+    const first = await addSet(session.id, pec.id, kg(60, 10))
+    const second = await addSet(session.id, pec.id, kg(60, 9))
+    await finishExercise(session.id, pec.id)
+    await deleteSet(session.id, pec.id, first.id)
+    expect((await db.sessions.get(session.id))?.exercises[0].finishedAt).not.toBeNull()
+    await deleteSet(session.id, pec.id, second.id)
+    expect((await db.sessions.get(session.id))?.exercises[0].finishedAt).toBeNull()
+  })
+
+  test('finishing the workout keeps the finished exercises and their sets', async () => {
+    const session = await startSession()
+    await addExerciseToSession(session.id, pec.id)
+    await addSet(session.id, pec.id, kg(60, 10))
+    await finishExercise(session.id, pec.id)
+    const done = await finishSession(session.id)
+    expect(done.exercises).toHaveLength(1)
+    expect(done.exercises[0].sets).toHaveLength(1)
   })
 })
 

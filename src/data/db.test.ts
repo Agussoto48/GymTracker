@@ -5,7 +5,7 @@ import { db } from './db.ts'
 
 const t = '2026-11-10T18:00:00.000Z'
 
-test('upgrading a v1 database keeps every record and gives exercises empty targets', async () => {
+test('upgrading a v1 database keeps every record, gives exercises empty targets and leaves exercises pending', async () => {
   db.close()
   await Dexie.delete('gymtracker')
 
@@ -38,7 +38,7 @@ test('upgrading a v1 database keeps every record and gives exercises empty targe
   v1.close()
 
   await db.open()
-  expect(db.verno).toBe(2)
+  expect(db.verno).toBe(3)
   expect(await db.exercises.get('e1')).toEqual({
     ...exercise,
     targetWeight: null,
@@ -47,7 +47,7 @@ test('upgrading a v1 database keeps every record and gives exercises empty targe
     targetUpdatedAt: null,
   })
   expect(await db.routines.get('r1')).toEqual(routine)
-  expect(await db.sessions.get('s1')).toEqual(session)
+  expect(await db.sessions.get('s1')).toEqual({ ...session, exercises: [{ ...session.exercises[0], finishedAt: null }] })
 })
 
 test('an exercise written without targets (by an older build) reads with empty targets', async () => {
@@ -59,4 +59,10 @@ test('an exercise written without targets (by an older build) reads with empty t
   expect(await db.exercises.get('old')).toEqual(expected)
   expect((await db.exercises.toArray()).find((e) => e.id === 'old')).toEqual(expected)
   expect(await db.exercises.bulkGet(['old'])).toEqual([expected])
+})
+
+test('a session written without finished flags (by an older build) reads with pending exercises', async () => {
+  const raw = { id: 'old-s', routineId: null, startedAt: t, finishedAt: null, exercises: [{ exerciseId: 'e1', notes: '', sets: [] }], exerciseIds: ['e1'] }
+  await db.table('sessions').add(raw)
+  expect((await db.sessions.get('old-s'))?.exercises[0].finishedAt).toBeNull()
 })

@@ -1,5 +1,5 @@
 import { Dexie, type EntityTable } from 'dexie'
-import type { Exercise, Routine, WorkoutSession } from '../domain/types.ts'
+import type { Exercise, Routine, SessionExercise, WorkoutSession } from '../domain/types.ts'
 
 /** Exercises without targets (written before v2) get empty ones: absent never reaches the app as undefined. */
 function withTargets(exercise: Partial<Exercise>) {
@@ -8,6 +8,12 @@ function withTargets(exercise: Partial<Exercise>) {
   exercise.targetReps ??= null
   exercise.targetUpdatedAt ??= null
   return exercise
+}
+
+/** Session exercises written before v3 are pending: absent never reaches the app as undefined. */
+function withFinishedFlags(session: WorkoutSession) {
+  for (const entry of session.exercises as Partial<SessionExercise>[]) entry.finishedAt ??= null
+  return session
 }
 
 // Only this folder may import Dexie (ADR-0002). Schema changes need a new version + upgrade (ADR-0003).
@@ -34,9 +40,21 @@ export class GymTrackerDb extends Dexie {
             withTargets(exercise)
           }),
       )
-    // A tab still running a pre-v2 build can keep writing exercises without targets after the upgrade.
+    // v3: each exercise in a session can be marked as finished (not indexed). Existing ones are pending.
+    this.version(3)
+      .stores({})
+      .upgrade((tx) =>
+        tx
+          .table('sessions')
+          .toCollection()
+          .modify((session: WorkoutSession) => {
+            withFinishedFlags(session)
+          }),
+      )
+    // A tab still running an older build can keep writing records without the new fields after an upgrade.
     // bulkGet also passes undefined for missing ids.
     this.exercises.hook('reading', (exercise?: Exercise) => (exercise ? (withTargets(exercise) as Exercise) : exercise))
+    this.sessions.hook('reading', (session?: WorkoutSession) => (session ? withFinishedFlags(session) : session))
   }
 }
 
