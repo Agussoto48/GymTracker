@@ -11,6 +11,7 @@ import {
 } from '../../../domain/workout.ts'
 import { ValidationError } from '../../../data/errors.ts'
 import { formatNumber, formatSet } from '../../../shared/lib/format.ts'
+import { SegmentedControl } from '../../../shared/ui/SegmentedControl.tsx'
 import styles from './SetEntry.module.css'
 
 type SetEntryProps = {
@@ -23,6 +24,11 @@ type SetEntryProps = {
   initial?: SetInput
   onSubmit: (input: SetInput) => Promise<void>
 }
+
+const UNIT_OPTIONS = [
+  { value: 'kg', label: 'kg' },
+  { value: 'lb', label: 'lb' },
+] as const satisfies readonly { value: WeightUnit; label: string }[]
 
 const toText = (value: number | null | undefined) => (value === null || value === undefined ? '' : formatNumber(value))
 
@@ -79,20 +85,17 @@ export function SetEntry({ title, kind, defaultUnit, suggestion, initial, onSubm
 
   return (
     <div className={styles.entry}>
-      <p className={styles.title}>{title}</p>
+      {/* The unit applies to the whole set, so it sits at the far right of the title row,
+          showing both options so it reads as a choice, not a label. */}
+      <div className={styles.head}>
+        <p className={styles.title}>{title}</p>
+        <SegmentedControl label="Unidad" hideLabel value={unit} options={UNIT_OPTIONS} onChange={setUnit} />
+      </div>
 
       <div className={styles.fields}>
         <div className={styles.field}>
           <div className={styles.fieldHead}>
             <label htmlFor={`${id}-weight`}>{weightLabel}</label>
-            <button
-              type="button"
-              className={styles.unit}
-              onClick={() => setUnit(unit === 'kg' ? 'lb' : 'kg')}
-              aria-label={`Unidad: ${unit}. Cambiar a ${unit === 'kg' ? 'lb' : 'kg'}`}
-            >
-              {unit}
-            </button>
           </div>
           <input
             id={`${id}-weight`}
