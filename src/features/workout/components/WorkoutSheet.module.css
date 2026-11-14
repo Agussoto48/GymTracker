@@ -39,6 +39,10 @@
   cursor: pointer;
 }
 
+.finished {
+  margin-top: var(--space-8);
+}
+
 .discard {
   margin-top: var(--space-8);
 }

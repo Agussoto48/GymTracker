@@ -1,15 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
-import type { Exercise, SessionExercise, WorkoutSet } from '../../../domain/types.ts'
-import { activeTarget, suggestNextSet, type SetInput } from '../../../domain/workout.ts'
+import type { Exercise, SessionExercise, WorkoutSession, WorkoutSet } from '../../../domain/types.ts'
+import { activeTarget, canFinishExercise, suggestNextSet, type SetInput } from '../../../domain/workout.ts'
 import {
   addSet,
   deleteSet,
+  finishExercise,
   removeExerciseFromSession,
+  reopenExercise,
   setSessionExerciseNotes,
   updateSet,
   useLastPerformance,
 } from '../../../data/sessions.ts'
 import { count, formatNumber, formatSet, formatShortDate, formatTarget } from '../../../shared/lib/format.ts'
+import { ActionSheet, type SheetAction } from '../../../shared/ui/ActionSheet.tsx'
+import { MoreButton } from '../../../shared/ui/MoreButton.tsx'
 import { useConfirm } from '../../../shared/ui/useConfirm.tsx'
 import { RowButton } from '../../../shared/ui/RowButton.tsx'
 import { Sheet } from '../../../shared/ui/Sheet.tsx'
@@ -25,6 +29,8 @@ type ExerciseCardProps = {
   onExpand: () => void
   /** Bring the card's top under the sheet header when it opens (not on the sheet's first render). */
   scrollOnExpand: boolean
+  /** After the person marks it as done, with the updated workout (to open the next exercise). */
+  onFinished: (session: WorkoutSession) => void
 }
 
 const toInput = (set: WorkoutSet, fallbackUnit: Exercise['defaultUnit']): SetInput => ({
@@ -34,11 +40,21 @@ const toInput = (set: WorkoutSet, fallbackUnit: Exercise['defaultUnit']): SetInp
   rpe: set.rpe,
 })
 
-export function ExerciseCard({ sessionId, entry, exercise, expanded, onExpand, scrollOnExpand }: ExerciseCardProps) {
+export function ExerciseCard({
+  sessionId,
+  entry,
+  exercise,
+  expanded,
+  onExpand,
+  scrollOnExpand,
+  onFinished,
+}: ExerciseCardProps) {
   const lastTime = useLastPerformance(exercise.id, sessionId)
   const [editing, setEditing] = useState<{ set: WorkoutSet; index: number } | null>(null)
   const [notes, setNotes] = useState(entry.notes)
   const [confirm, confirmSheet] = useConfirm()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const finished = entry.finishedAt !== null
   const cardRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -56,7 +72,14 @@ export function ExerciseCard({ sessionId, entry, exercise, expanded, onExpand, s
     const lastSet = entry.sets.at(-1)
     return (
       <button type="button" className={styles.collapsed} onClick={onExpand}>
-        <span className={styles.name}>{exercise.name}</span>
+        <span className={styles.name}>
+          {finished && (
+            <span className={styles.done} aria-hidden="true">
+              ✓{' '}
+            </span>
+          )}
+          {exercise.name}
+        </span>
         <span className={`${styles.meta} figures`}>
           {lastSet
             ? `${entry.sets.length} ${entry.sets.length === 1 ? 'serie' : 'series'} · ${formatSet(lastSet, exercise.kind)}`
@@ -83,9 +106,9 @@ export function ExerciseCard({ sessionId, entry, exercise, expanded, onExpand, s
   async function remove() {
     if (entry.sets.length > 0) {
       const confirmed = await confirm({
-        title: `¿Quitar «${exercise.name}»?`,
+        title: `¿Quitar «${exercise.name}» del entrenamiento?`,
         message: `Se borrarán sus ${count(entry.sets.length, 'serie', 'series')} de hoy.`,
-        confirmLabel: 'Quitar ejercicio',
+        confirmLabel: 'Quitar del entrenamiento',
         destructive: true,
       })
       if (!confirmed) return
@@ -93,11 +116,29 @@ export function ExerciseCard({ sessionId, entry, exercise, expanded, onExpand, s
     await removeExerciseFromSession(sessionId, exercise.id)
   }
 
+  const canFinish = canFinishExercise(entry)
+  const menuActions: SheetAction[] = [
+    finished
+      ? { id: 'reopen', label: 'Reabrir ejercicio' }
+      : { id: 'finish', label: 'Finalizar ejercicio', disabled: !canFinish },
+    { id: 'remove', label: 'Quitar del entrenamiento', destructive: true },
+  ]
+
+  async function onMenu(actionId: string | null) {
+    setMenuOpen(false)
+    if (actionId === 'finish') onFinished(await finishExercise(sessionId, exercise.id))
+    if (actionId === 'reopen') await reopenExercise(sessionId, exercise.id)
+    if (actionId === 'remove') await remove()
+  }
+
   return (
     <section ref={cardRef} className={styles.card} aria-labelledby={`ex-${exercise.id}`}>
-      <h3 id={`ex-${exercise.id}`} className={styles.title}>
-        {exercise.name}
-      </h3>
+      <div className={styles.head}>
+        <h3 id={`ex-${exercise.id}`} className={styles.title}>
+          {exercise.name}
+        </h3>
+        <MoreButton variant="inline" label={`Opciones de ${exercise.name}`} onClick={() => setMenuOpen(true)} />
+      </div>
       {exercise.notes && <p className={styles.fixedNote}>{exercise.notes}</p>}
       {targetText && <p className={`${styles.target} figures`}>Objetivo · {targetText}</p>}
       {lastTime ? (
@@ -169,10 +210,6 @@ export function ExerciseCard({ sessionId, entry, exercise, expanded, onExpand, s
         maxLength={500}
       />
 
-      <RowButton tone="destructive" onClick={() => void remove()}>
-        Quitar ejercicio
-      </RowButton>
-
       {editing && (
         <Sheet title={`Editar serie ${editing.index + 1}`} onClose={() => setEditing(null)}>
           <div className={styles.editBody}>
@@ -200,6 +237,15 @@ export function ExerciseCard({ sessionId, entry, exercise, expanded, onExpand, s
             </RowButton>
           </div>
         </Sheet>
+      )}
+      {menuOpen && (
+        <ActionSheet
+          variant="menu"
+          title={exercise.name}
+          message={!finished && !canFinish ? 'Anota una serie para poder finalizarlo.' : undefined}
+          actions={menuActions}
+          onSelect={(actionId) => void onMenu(actionId)}
+        />
       )}
       {confirmSheet}
     </section>

@@ -19,6 +19,10 @@
   overflow-wrap: anywhere;
 }
 
+.done {
+  color: var(--label-2);
+}
+
 .meta {
   flex-shrink: 0;
   color: var(--label-2);
@@ -36,7 +40,15 @@
   scroll-margin-top: var(--space-3);
 }
 
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
 .title {
+  min-width: 0;
   font-size: var(--text-title);
   font-weight: 700;
   line-height: 1.2;
