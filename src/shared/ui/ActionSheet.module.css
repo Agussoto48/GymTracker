@@ -94,3 +94,13 @@
   border-top: 0;
   font-weight: 700;
 }
+
+/* Not available right now (the sheet's message says why); dimmed, not removed, so the option stays discoverable. */
+.button:disabled {
+  color: var(--label-3);
+  cursor: default;
+}
+
+.button:disabled:active {
+  background: none;
+}

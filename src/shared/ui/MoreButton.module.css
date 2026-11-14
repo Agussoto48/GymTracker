@@ -15,3 +15,24 @@
 .button:active {
   filter: brightness(0.92);
 }
+
+/* On a card (--surface): a smaller fill that still contrasts with it; the target stays 44 px. */
+.inline {
+  position: relative;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  background: var(--surface-2);
+  color: var(--label-2);
+}
+
+.inline::after {
+  content: '';
+  position: absolute;
+  inset: calc((32px - var(--tap)) / 2);
+}
+
+.inline svg {
+  width: 18px;
+  height: 18px;
+}
