@@ -3,6 +3,7 @@ import { ExercisesScreen } from '../features/exercises/ExercisesScreen.tsx'
 import { HistoryScreen } from '../features/history/HistoryScreen.tsx'
 import { RoutinesScreen } from '../features/routines/RoutinesScreen.tsx'
 import { WorkoutScreen } from '../features/workout/WorkoutScreen.tsx'
+import { ToastProvider } from '../shared/ui/Toast.tsx'
 import { TabBar, type TabId } from './TabBar.tsx'
 import { UpdateBanner } from './UpdateBanner.tsx'
 import styles from './App.module.css'
@@ -19,12 +20,12 @@ export default function App() {
   const Screen = SCREENS[tab]
 
   return (
-    <>
+    <ToastProvider>
       <main className={styles.content}>
         <Screen />
       </main>
       <UpdateBanner />
       <TabBar current={tab} onSelect={setTab} />
-    </>
+    </ToastProvider>
   )
 }
