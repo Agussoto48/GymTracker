@@ -15,7 +15,7 @@ import {
   useExerciseInUse,
 } from '../../data/exercises.ts'
 import { useLastPerformance } from '../../data/sessions.ts'
-import { formatNumber, formatSet, formatShortDate } from '../lib/format.ts'
+import { formatNumber, formatShortDate } from '../lib/format.ts'
 import { SegmentedControl } from './SegmentedControl.tsx'
 import { useConfirm } from './useConfirm.tsx'
 import { RowButton } from './RowButton.tsx'
@@ -160,15 +160,6 @@ export function ExerciseSheet({ exercise, initialName = '', onClose, onCreated }
           placeholder="Ej.: Press banca"
         />
 
-        {lastTime && exercise && (
-          <div className={styles.lastTime}>
-            <p className={styles.lastTimeLabel}>Última vez · {formatShortDate(lastTime.startedAt)}</p>
-            <p className={`${styles.lastTimeSets} figures`}>
-              {lastTime.sets.map((set) => formatSet(set, exercise.kind)).join(' · ')}
-            </p>
-          </div>
-        )}
-
         {!loading && (
           <>
             <TextField
@@ -221,9 +212,11 @@ export function ExerciseSheet({ exercise, initialName = '', onClose, onCreated }
               </div>
               <p id={`${targetsId}-desc`} className={targetsError ? styles.fieldError : styles.hint}>
                 {targetsError ??
-                  (lastTime
-                    ? 'Muestra lo último que hiciste. Al entrenar no podrás anotar más series que estas; si cambias el peso o las reps, tu próximo entrenamiento los propone.'
-                    : 'Al entrenar no podrás anotar más series que estas. El peso y las reps se proponen en tu primera serie.')}
+                  (!lastTime
+                    ? 'Al entrenar no podrás anotar más series que estas. El peso y las reps se proponen en tu primera serie.'
+                    : latest?.source === 'last-time'
+                      ? `Muestra lo que hiciste el ${formatShortDate(lastTime.startedAt)}. Al entrenar no podrás anotar más series que estas; si cambias el peso o las reps, tu próximo entrenamiento los propone.`
+                      : 'Muestra tu objetivo: tu próximo entrenamiento lo propone. Al entrenar no podrás anotar más series que estas.')}
               </p>
             </fieldset>
           </>

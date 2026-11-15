@@ -196,11 +196,11 @@ describe('latestTargets', () => {
   const lastTime = { sessionId: 's', startedAt: '2026-11-10T18:00:00.000Z', sets: [set(60, 10), set(62.5, 8)] }
 
   test('without history, the targets', () => {
-    expect(latestTargets(exercise, null)).toEqual({ weight: 40, sets: 3, reps: 10 })
+    expect(latestTargets(exercise, null)).toEqual({ weight: 40, sets: 3, reps: 10, source: 'targets' })
   })
 
   test('with a newer workout, the last set done; the target sets stay (a plan, not a result)', () => {
-    expect(latestTargets(exercise, lastTime)).toEqual({ weight: 62.5, sets: 3, reps: 8 })
+    expect(latestTargets(exercise, lastTime)).toEqual({ weight: 62.5, sets: 3, reps: 8, source: 'last-time' })
     expect(latestTargets({ ...exercise, targetSets: null }, lastTime).sets).toBe(2)
   })
 
@@ -209,6 +209,7 @@ describe('latestTargets', () => {
       weight: 40,
       sets: 3,
       reps: 10,
+      source: 'targets',
     })
   })
 

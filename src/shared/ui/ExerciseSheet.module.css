@@ -19,25 +19,6 @@
   color: var(--label-3);
 }
 
-.lastTime {
-  display: grid;
-  gap: var(--space-1);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-card);
-  background: var(--surface);
-}
-
-.lastTimeLabel {
-  color: var(--label-2);
-  font-size: var(--text-footnote);
-  font-weight: 600;
-}
-
-.lastTimeSets {
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
 /* Sets × reps: two small number boxes with a "×" between them. */
 .targets {
   display: grid;

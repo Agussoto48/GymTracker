@@ -123,7 +123,13 @@ export function activeTarget(
   }
 }
 
-export type TargetValues = { weight: number | null; sets: number | null; reps: number | null }
+export type TargetValues = {
+  weight: number | null
+  sets: number | null
+  reps: number | null
+  /** Where weight and reps come from, so the form can say so (and when). */
+  source: 'targets' | 'last-time'
+}
 
 /**
  * What the exercise form shows: the targets when there is no history or they were set after the
@@ -134,7 +140,7 @@ export function latestTargets(
   exercise: Pick<Exercise, 'kind' | 'defaultUnit' | 'targetWeight' | 'targetSets' | 'targetReps' | 'targetUpdatedAt'>,
   lastTime: LastPerformance | null,
 ): TargetValues {
-  const targets = { weight: exercise.targetWeight, sets: exercise.targetSets, reps: exercise.targetReps }
+  const targets = { weight: exercise.targetWeight, sets: exercise.targetSets, reps: exercise.targetReps, source: 'targets' as const }
   if (!lastTime || (exercise.targetUpdatedAt !== null && exercise.targetUpdatedAt > lastTime.startedAt)) return targets
   const lastSet = lastTime.sets.at(-1)
   const lastWeight = lastSet?.weight
@@ -143,7 +149,7 @@ export function latestTargets(
     lastWeight && lastWeight.unit === exercise.defaultUnit && (exercise.kind === 'weighted' || lastWeight.value > 0)
       ? lastWeight.value
       : null
-  return { weight, sets: exercise.targetSets ?? lastTime.sets.length, reps: lastSet?.reps ?? null }
+  return { weight, sets: exercise.targetSets ?? lastTime.sets.length, reps: lastSet?.reps ?? null, source: 'last-time' }
 }
 
 /**
