@@ -132,16 +132,9 @@
   font-weight: 600;
 }
 
-/* The set the ghost repeats: accent-filled like the "Repetir" button it feeds, plus bold (not color alone). */
+/* Last time's set with the number being logged: outlined, not filled (the orange fill is kept for the
+   one primary button). Accent edge ≥ 5.3:1 on the pill, plus bold text (not color alone). */
 .lastTimeSets .lastTimeCurrent {
-  background: var(--accent);
-  color: var(--on-accent);
-  font-weight: 700;
-}
-
-/* Same set number, for comparing (the ghost comes from today's previous set): outlined, not filled,
-   so it never reads as the one being repeated. Accent edge ≥ 5:1 on the pill; bold text. */
-.lastTimeSets .lastTimeCompare {
   box-shadow: inset 0 0 0 1.5px var(--accent-text);
   color: var(--label);
   font-weight: 700;
