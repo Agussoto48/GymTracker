@@ -185,14 +185,19 @@ export function ExerciseCard({
           {/* The highlighted set is the one the ghost below repeats (not when a target drives it). */}
           <ol className={`${styles.lastTimeSets} figures`} aria-label="Series de la última vez">
             {lastTime.sets.map((set, index) => {
-              const current = suggestion?.source === 'last-time' && index === entry.sets.length
+              // Same set number as the one being logged: filled when the ghost repeats it, outlined
+              // when the ghost comes from elsewhere (today's previous set, a target) so it can be compared.
+              const sameNumber = !allSetsLogged && index === entry.sets.length
+              const current = sameNumber && suggestion?.source === 'last-time'
+              const compare = sameNumber && !current
               return (
                 <li
                   key={set.id}
-                  className={current ? styles.lastTimeCurrent : undefined}
+                  className={current ? styles.lastTimeCurrent : compare ? styles.lastTimeCompare : undefined}
                   aria-current={current ? 'step' : undefined}
                 >
                   {formatSet(set, exercise.kind)}
+                  {compare && <span className="visually-hidden"> (la misma serie, para comparar)</span>}
                 </li>
               )
             })}
