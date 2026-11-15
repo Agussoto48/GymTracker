@@ -8,9 +8,9 @@ import { createRoutine } from './routines.ts'
 import { addSet, finishSession, startSession } from './sessions.ts'
 
 async function seed() {
-  const bench = await createExercise({ name: 'Press banca', kind: 'weighted', defaultUnit: 'kg', notes: 'agarre medio' })
-  const dips = await createExercise({ name: 'Fondos', kind: 'bodyweight', defaultUnit: 'lb', notes: '' })
-  const old = await createExercise({ name: 'Viejo', kind: 'weighted', defaultUnit: 'kg', notes: '' })
+  const bench = await createExercise({ name: 'Press banca', kind: 'weighted', defaultUnit: 'kg', notes: 'agarre medio', targetSets: 3 })
+  const dips = await createExercise({ name: 'Fondos', kind: 'bodyweight', defaultUnit: 'lb', notes: '', targetSets: 3 })
+  const old = await createExercise({ name: 'Viejo', kind: 'weighted', defaultUnit: 'kg', notes: '', targetSets: 3 })
   await setExerciseArchived(old.id, true)
   const push = await createRoutine({ name: 'Push', exerciseIds: [bench.id, dips.id] })
   const done = await startSession(push.id)
@@ -54,7 +54,7 @@ describe('backup round trip', () => {
   test('import replaces existing data instead of merging', async () => {
     await seed()
     const text = JSON.stringify(await createBackup())
-    await createExercise({ name: 'Extra', kind: 'weighted', defaultUnit: 'kg', notes: '' })
+    await createExercise({ name: 'Extra', kind: 'weighted', defaultUnit: 'kg', notes: '', targetSets: 3 })
     const parsed = parseBackup(text)
     if (!parsed.ok) throw new Error(parsed.errors.join())
     await replaceAllData(parsed.data)

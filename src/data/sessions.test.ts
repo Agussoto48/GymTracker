@@ -32,8 +32,8 @@ const kg = (weight: number | null, reps: number, rpe: number | null = null) => (
 beforeEach(async () => {
   await db.delete()
   await db.open()
-  pec = await createExercise({ name: 'Pec Deck', kind: 'weighted', defaultUnit: 'kg', notes: '' })
-  pullUp = await createExercise({ name: 'Dominadas', kind: 'bodyweight', defaultUnit: 'kg', notes: '' })
+  pec = await createExercise({ name: 'Pec Deck', kind: 'weighted', defaultUnit: 'kg', notes: '', targetSets: 3 })
+  pullUp = await createExercise({ name: 'Dominadas', kind: 'bodyweight', defaultUnit: 'kg', notes: '', targetSets: 3 })
 })
 
 describe('session lifecycle', () => {
@@ -103,13 +103,13 @@ describe('exercises and sets', () => {
     await addExerciseToSession(session.id, pec.id)
     await addExerciseToSession(session.id, pullUp.id)
     await expect(addSet(session.id, pec.id, kg(null, 10))).rejects.toBeInstanceOf(ValidationError)
-    await expect(addSet(session.id, pullUp.id, kg(null, 8))).resolves.toMatchObject({ weight: null })
+    await expect(addSet(session.id, pullUp.id, kg(null, 8))).resolves.toMatchObject({ set: { weight: null } })
   })
 
   test('edits and deletes a set', async () => {
     const session = await startSession()
     await addExerciseToSession(session.id, pec.id)
-    const first = await addSet(session.id, pec.id, kg(60, 10))
+    const { set: first } = await addSet(session.id, pec.id, kg(60, 10))
     await updateSet(session.id, pec.id, first.id, kg(65, 9))
     let stored = await db.sessions.get(session.id)
     expect(stored?.exercises[0].sets[0]).toMatchObject({ id: first.id, weight: { value: 65 }, reps: 9 })
@@ -147,8 +147,8 @@ describe('finishing an exercise', () => {
   test('deleting its last set makes it pending; other sets keep it finished', async () => {
     const session = await startSession()
     await addExerciseToSession(session.id, pec.id)
-    const first = await addSet(session.id, pec.id, kg(60, 10))
-    const second = await addSet(session.id, pec.id, kg(60, 9))
+    const { set: first } = await addSet(session.id, pec.id, kg(60, 10))
+    const { set: second } = await addSet(session.id, pec.id, kg(60, 9))
     await finishExercise(session.id, pec.id)
     await deleteSet(session.id, pec.id, first.id)
     expect((await db.sessions.get(session.id))?.exercises[0].finishedAt).not.toBeNull()
@@ -164,6 +164,30 @@ describe('finishing an exercise', () => {
     const done = await finishSession(session.id)
     expect(done.exercises).toHaveLength(1)
     expect(done.exercises[0].sets).toHaveLength(1)
+  })
+})
+
+describe('target sets', () => {
+  test('the set that reaches the target finishes the exercise; no set past it', async () => {
+    const session = await startSession()
+    await addExerciseToSession(session.id, pec.id)
+    await addSet(session.id, pec.id, kg(60, 10))
+    const second = await addSet(session.id, pec.id, kg(60, 10))
+    expect(second.session.exercises[0].finishedAt).toBeNull()
+    const third = await addSet(session.id, pec.id, kg(60, 10))
+    expect(third.session.exercises[0].finishedAt).toBe(third.set.completedAt)
+    await expect(addSet(session.id, pec.id, kg(60, 10))).rejects.toThrow()
+    expect((await db.sessions.get(session.id))?.exercises[0].sets).toHaveLength(3)
+  })
+
+  test('an exercise without target sets (saved before they were required) has no limit', async () => {
+    await db.exercises.update(pec.id, { targetSets: null })
+    const session = await startSession()
+    await addExerciseToSession(session.id, pec.id)
+    for (let i = 0; i < 5; i++) await addSet(session.id, pec.id, kg(60, 10))
+    const stored = (await db.sessions.get(session.id))?.exercises[0]
+    expect(stored?.sets).toHaveLength(5)
+    expect(stored?.finishedAt).toBeNull()
   })
 })
 

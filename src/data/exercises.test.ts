@@ -12,7 +12,7 @@ import {
   updateExercise,
 } from './exercises.ts'
 
-const bench = { name: 'Press banca', kind: 'weighted', defaultUnit: 'kg', notes: '' }
+const bench = { name: 'Press banca', kind: 'weighted', defaultUnit: 'kg', notes: '', targetSets: 3 }
 
 function sessionWith(exerciseId: string): WorkoutSession {
   return {
@@ -39,11 +39,18 @@ describe('createExercise', () => {
     expect(await db.exercises.get(created.id)).toEqual(created)
   })
 
-  test('stores targets and when they were set; none when not given', async () => {
+  test('stores targets and when they were set; weight and reps are optional', async () => {
     const withTargets = await createExercise({ ...bench, targetWeight: 40, targetSets: 3, targetReps: 10 })
     expect(withTargets).toMatchObject({ targetWeight: 40, targetSets: 3, targetReps: 10, targetUpdatedAt: withTargets.createdAt })
-    const without = await createExercise({ ...bench, name: 'Remo' })
-    expect(without).toMatchObject({ targetWeight: null, targetSets: null, targetReps: null, targetUpdatedAt: null })
+    const setsOnly = await createExercise({ ...bench, name: 'Remo' })
+    expect(setsOnly).toMatchObject({ targetWeight: null, targetSets: 3, targetReps: null })
+  })
+
+  test('requires the number of sets', async () => {
+    await expect(createExercise({ ...bench, targetSets: null })).rejects.toMatchObject({
+      errors: { targetSets: 'Escribe cuántas series harás.' },
+    })
+    expect(await db.exercises.count()).toBe(0)
   })
 
   test('without an explicit kind, the weight decides it (empty = bodyweight)', async () => {
@@ -95,6 +102,18 @@ describe('updateExercise', () => {
     expect(notesOnly).toMatchObject({ targetWeight: 45, targetUpdatedAt: changed.targetUpdatedAt })
     const same = await updateExercise(created.id, { ...bench, targetWeight: 45, targetSets: 3, targetReps: 10 })
     expect(same.targetUpdatedAt).toBe(changed.targetUpdatedAt)
+    // The sets do not change what the next workout proposes, so they do not stamp.
+    const moreSets = await updateExercise(created.id, { ...bench, targetSets: 4 })
+    expect(moreSets).toMatchObject({ targetSets: 4, targetUpdatedAt: changed.targetUpdatedAt })
+  })
+
+  test('an exercise saved before sets were required must get them on its next edit', async () => {
+    const created = await createExercise(bench)
+    await db.exercises.update(created.id, { targetSets: null })
+    await expect(updateExercise(created.id, { ...bench, targetSets: undefined, notes: 'x' })).rejects.toMatchObject({
+      errors: { targetSets: 'Escribe cuántas series harás.' },
+    })
+    await expect(updateExercise(created.id, { ...bench, targetSets: 4 })).resolves.toMatchObject({ targetSets: 4 })
   })
 
   test('without history the kind follows the weight; with history it stays', async () => {

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Exercise, SessionExercise, WorkoutSession, WorkoutSet } from '../../../domain/types.ts'
-import { activeTarget, canFinishExercise, suggestNextSet, type SetInput } from '../../../domain/workout.ts'
+import { activeTarget, canFinishExercise, isSetLimitReached, suggestNextSet, type SetInput } from '../../../domain/workout.ts'
 import {
   addSet,
   deleteSet,
@@ -101,7 +101,9 @@ export function ExerciseCard({
     kind: exercise.kind,
   })
   const setNumber = entry.sets.length + 1
-  const ofTarget = exercise.targetSets !== null && setNumber <= exercise.targetSets ? ` de ${exercise.targetSets}` : ''
+  const ofTarget = exercise.targetSets !== null ? ` de ${exercise.targetSets}` : ''
+  // The target sets are the plan: once logged, no more sets (sets can still be edited or deleted).
+  const allSetsLogged = isSetLimitReached(entry.sets.length, exercise.targetSets)
 
   async function remove() {
     if (entry.sets.length > 0) {
@@ -188,16 +190,22 @@ export function ExerciseCard({
         </ol>
       )}
 
-      <SetEntry
-        key={entry.sets.length}
-        title={`Serie ${setNumber}${ofTarget}`}
-        kind={exercise.kind}
-        defaultUnit={exercise.defaultUnit}
-        suggestion={suggestion}
-        onSubmit={async (input) => {
-          await addSet(sessionId, exercise.id, input)
-        }}
-      />
+      {allSetsLogged ? (
+        <p className={styles.allSets}>Completaste {count(entry.sets.length, 'serie', 'series')}.</p>
+      ) : (
+        <SetEntry
+          key={entry.sets.length}
+          title={`Serie ${setNumber}${ofTarget}`}
+          kind={exercise.kind}
+          defaultUnit={exercise.defaultUnit}
+          suggestion={suggestion}
+          onSubmit={async (input) => {
+            const { session } = await addSet(sessionId, exercise.id, input)
+            // The last target set finishes the exercise (data/sessions.ts › addSet): open the next one.
+            if (!finished && session.exercises.find((e) => e.exerciseId === exercise.id)?.finishedAt) onFinished(session)
+          }}
+        />
+      )}
 
       <TextField
         multiline

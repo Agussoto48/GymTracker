@@ -43,7 +43,15 @@ export type ValidationResult =
   | { ok: true; value: ExerciseFields }
   | { ok: false; errors: ExerciseErrors }
 
-export function validateExercise(input: ExerciseInput): ValidationResult {
+export type ExerciseValidationOptions = {
+  /**
+   * Exercises saved from the app must say how many sets (the workout stops there). Imports do not:
+   * exercises from before this rule have none, and then the workout has no limit.
+   */
+  requireTargetSets?: boolean
+}
+
+export function validateExercise(input: ExerciseInput, options: ExerciseValidationOptions = {}): ValidationResult {
   const errors: ExerciseErrors = {}
 
   const name = typeof input.name === 'string' ? normalizeName(input.name) : ''
@@ -73,7 +81,9 @@ export function validateExercise(input: ExerciseInput): ValidationResult {
     errors.targetWeight = `Peso entre 0 y ${WEIGHT_MAX}, máximo 2 decimales.`
   }
   const targetSets = input.targetSets ?? null
-  if (targetSets !== null && !isWholeIn(targetSets, 1, TARGET_SETS_MAX)) {
+  if (targetSets === null && options.requireTargetSets) {
+    errors.targetSets = 'Escribe cuántas series harás.'
+  } else if (targetSets !== null && !isWholeIn(targetSets, 1, TARGET_SETS_MAX)) {
     errors.targetSets = `Series enteras entre 1 y ${TARGET_SETS_MAX}.`
   }
   const targetReps = input.targetReps ?? null

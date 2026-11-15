@@ -4,7 +4,7 @@ import type { Exercise, ExerciseKind, Id, SessionExercise, Weight, WeightUnit, W
 export const WEIGHT_MAX = 2000
 export const REPS_MAX = 200
 export const SESSION_NOTES_MAX_LENGTH = 500
-/** RPE values offered in the UI; validation accepts the full 1–10 range. */
+/** RPE values for the UI (hidden for now; recorded RPE is kept). Validation accepts the full 1–10 range. */
 export const RPE_OPTIONS = [6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10] as const
 export const WEIGHT_STEP: Record<WeightUnit, number> = { kg: 2.5, lb: 5 }
 
@@ -194,4 +194,9 @@ export function splitFinished(exercises: readonly SessionExercise[]): {
 export function exerciseToOpen(exercises: readonly SessionExercise[]): Id | null {
   const { pending } = splitFinished(exercises)
   return (pending.find((e) => e.sets.length === 0) ?? pending.at(-1))?.exerciseId ?? null
+}
+
+/** With a target number of sets, the workout logs that many and no more; without one there is no limit. */
+export function isSetLimitReached(setCount: number, targetSets: number | null): boolean {
+  return targetSets !== null && setCount >= targetSets
 }

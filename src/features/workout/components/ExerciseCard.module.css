@@ -147,6 +147,13 @@
 }
 
 
+.allSets {
+  padding: var(--space-2) 0;
+  color: var(--label-2);
+  font-weight: 600;
+  text-align: center;
+}
+
 .editBody {
   display: grid;
   gap: var(--space-4);

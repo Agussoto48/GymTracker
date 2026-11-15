@@ -95,7 +95,10 @@ export function ExerciseSheet({ exercise, initialName = '', onClose, onCreated }
             targetSets: parseDecimal(shown.sets),
             targetReps: parseDecimal(shown.reps),
           }
-        : {}),
+        : // Saved before sets were required: the shown sets (last time's count, or empty) are saved.
+          exercise.targetSets === null
+          ? { targetSets: parseDecimal(shown.sets) }
+          : {}),
     }
     if (exercise) void run(() => updateExercise(exercise.id, input))
     else void run(() => createExercise(input), onCreated ?? onClose)
@@ -188,15 +191,15 @@ export function ExerciseSheet({ exercise, initialName = '', onClose, onCreated }
             />
 
             <fieldset className={styles.targets} aria-describedby={`${targetsId}-desc`}>
-              <legend className={styles.targetsLegend}>Series × reps (opcional)</legend>
+              <legend className={styles.targetsLegend}>Series × reps (reps opcionales)</legend>
               <div className={styles.targetsRow}>
                 <input
                   className={`${styles.targetInput} figures`}
                   aria-label="Series"
+                  aria-required="true"
                   inputMode="numeric"
                   autoComplete="off"
                   enterKeyHint="done"
-                  placeholder="3"
                   value={shown.sets}
                   onChange={(event) => setSetsText(event.target.value)}
                   aria-invalid={errors.targetSets ? true : undefined}
@@ -219,8 +222,8 @@ export function ExerciseSheet({ exercise, initialName = '', onClose, onCreated }
               <p id={`${targetsId}-desc`} className={targetsError ? styles.fieldError : styles.hint}>
                 {targetsError ??
                   (lastTime
-                    ? 'Muestra lo último que hiciste. Si cambias peso, series o reps, tu próximo entrenamiento los propone.'
-                    : 'Tu objetivo: lo verás al entrenar y se propone en tu primera serie.')}
+                    ? 'Muestra lo último que hiciste. Al entrenar no podrás anotar más series que estas; si cambias el peso o las reps, tu próximo entrenamiento los propone.'
+                    : 'Al entrenar no podrás anotar más series que estas. El peso y las reps se proponen en tu primera serie.')}
               </p>
             </fieldset>
           </>

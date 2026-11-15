@@ -57,6 +57,13 @@ describe('validateExercise', () => {
     expect(missing.ok && missing.value).toMatchObject({ targetWeight: null, targetSets: null, targetReps: null })
   })
 
+  test('sets are required when saving from the app (not in imports); weight and reps stay optional', () => {
+    const required = validateExercise({ ...valid }, { requireTargetSets: true })
+    expect(!required.ok && required.errors.targetSets).toBe('Escribe cuántas series harás.')
+    const setsOnly = validateExercise({ ...valid, targetSets: 4 }, { requireTargetSets: true })
+    expect(setsOnly.ok && setsOnly.value).toMatchObject({ targetWeight: null, targetSets: 4, targetReps: null })
+  })
+
   test('deduceKind: no target weight means bodyweight', () => {
     expect(deduceKind(null)).toBe('bodyweight')
     expect(deduceKind(0)).toBe('weighted')

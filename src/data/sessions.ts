@@ -5,6 +5,7 @@ import {
   SESSION_NOTES_MAX_LENGTH,
   canFinishExercise,
   findLastPerformance,
+  isSetLimitReached,
   validateSet,
   withDerivedExerciseIds,
   type LastPerformance,
@@ -105,21 +106,33 @@ async function validSetFields(exerciseId: Id, input: SetInput) {
   if (!exercise) throw new NotFoundError('Exercise', exerciseId)
   const result = validateSet(input, exercise.kind)
   if (!result.ok) throw new ValidationError(result.errors)
-  return result.value
+  return { fields: result.value, targetSets: exercise.targetSets }
 }
 
-/** Saves a set immediately: iOS may close the app in the background at any time. */
-export async function addSet(sessionId: Id, exerciseId: Id, input: SetInput): Promise<WorkoutSet> {
-  const fields = await validSetFields(exerciseId, input)
+/**
+ * Saves a set immediately: iOS may close the app in the background at any time. Refuses one past
+ * the exercise's target sets; the set that reaches them finishes the exercise.
+ */
+export async function addSet(
+  sessionId: Id,
+  exerciseId: Id,
+  input: SetInput,
+): Promise<{ set: WorkoutSet; session: WorkoutSession }> {
+  const { fields, targetSets } = await validSetFields(exerciseId, input)
   const newSet: WorkoutSet = { id: createId(), ...fields, completedAt: now() }
-  await changeActiveSession(sessionId, (session) =>
-    updateEntry(session, exerciseId, (entry) => ({ ...entry, sets: [...entry.sets, newSet] })),
+  const session = await changeActiveSession(sessionId, (current) =>
+    updateEntry(current, exerciseId, (entry) => {
+      if (isSetLimitReached(entry.sets.length, targetSets)) throw new Error('All target sets are already logged.')
+      const sets = [...entry.sets, newSet]
+      const finishedAt = isSetLimitReached(sets.length, targetSets) ? (entry.finishedAt ?? newSet.completedAt) : entry.finishedAt
+      return { ...entry, sets, finishedAt }
+    }),
   )
-  return newSet
+  return { set: newSet, session }
 }
 
 export async function updateSet(sessionId: Id, exerciseId: Id, setId: Id, input: SetInput): Promise<void> {
-  const fields = await validSetFields(exerciseId, input)
+  const { fields } = await validSetFields(exerciseId, input)
   await changeActiveSession(sessionId, (session) =>
     updateEntry(session, exerciseId, (entry) => {
       if (!entry.sets.some((s) => s.id === setId)) throw new NotFoundError('Set', setId)

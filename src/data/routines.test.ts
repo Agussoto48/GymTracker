@@ -18,7 +18,7 @@ let bench: Exercise
 let pec: Exercise
 let row: Exercise
 
-const exercise = (name: string) => createExercise({ name, kind: 'weighted', defaultUnit: 'kg', notes: '' })
+const exercise = (name: string) => createExercise({ name, kind: 'weighted', defaultUnit: 'kg', notes: '', targetSets: 3 })
 
 beforeEach(async () => {
   await db.delete()

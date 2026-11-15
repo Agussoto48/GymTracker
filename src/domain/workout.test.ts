@@ -4,6 +4,7 @@ import {
   canFinishExercise,
   exerciseToOpen,
   findLastPerformance,
+  isSetLimitReached,
   splitFinished,
   isValidRpe,
   parseDecimal,
@@ -250,4 +251,10 @@ describe('finishing exercises', () => {
     expect(exerciseToOpen([entry('a', 2, '2026-11-14T18:10:00.000Z')])).toBeNull()
     expect(exerciseToOpen([])).toBeNull()
   })
+})
+
+test('the set limit is the target sets; without them there is none', () => {
+  expect(isSetLimitReached(3, 4)).toBe(false)
+  expect(isSetLimitReached(4, 4)).toBe(true)
+  expect(isSetLimitReached(40, null)).toBe(false)
 })

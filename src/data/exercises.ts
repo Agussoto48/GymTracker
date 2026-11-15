@@ -15,7 +15,7 @@ import { createId } from './ids.ts'
 const now = () => new Date().toISOString()
 
 function validOrThrow(input: ExerciseInput) {
-  const result = validateExercise(input)
+  const result = validateExercise(input, { requireTargetSets: true })
   if (!result.ok) throw new ValidationError(result.errors)
   return result.value
 }
@@ -47,8 +47,9 @@ export async function createExercise(input: ExerciseInput): Promise<Exercise> {
 }
 
 /**
- * Targets left out of `input` are kept (absent never means "clear"). Changing any target stamps
- * `targetUpdatedAt`, so the next workout proposes them. Without history, the kind follows the weight.
+ * Targets left out of `input` are kept (absent never means "clear"). Changing the target weight or
+ * reps stamps `targetUpdatedAt`, so the next workout proposes them (the sets do not change what is
+ * proposed). Without history, the kind follows the weight.
  */
 export async function updateExercise(id: Id, input: ExerciseInput): Promise<Exercise> {
   return db.transaction('rw', db.exercises, db.sessions, async () => {
@@ -71,10 +72,7 @@ export async function updateExercise(id: Id, input: ExerciseInput): Promise<Exer
       throw new ValidationError({ kind: 'No se puede cambiar: ya tiene historial.' })
     }
     const timestamp = now()
-    const targetsChanged =
-      fields.targetWeight !== current.targetWeight ||
-      fields.targetSets !== current.targetSets ||
-      fields.targetReps !== current.targetReps
+    const targetsChanged = fields.targetWeight !== current.targetWeight || fields.targetReps !== current.targetReps
     const updated: Exercise = {
       ...current,
       ...fields,
