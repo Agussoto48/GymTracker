@@ -19,9 +19,11 @@ type WorkoutSheetProps = {
   routineName: string | null
   /** Hides the workout without finishing it; it can be resumed from the Entrenar tab. */
   onHide: () => void
+  /** After the workout is finished and saved, with the finished session (for the summary). */
+  onFinished: (session: WorkoutSession) => void
 }
 
-export function WorkoutSheet({ session, exercises, routineName, onHide }: WorkoutSheetProps) {
+export function WorkoutSheet({ session, exercises, routineName, onHide, onFinished }: WorkoutSheetProps) {
   const now = useNow()
   const [picking, setPicking] = useState(false)
   // The open card: first pending exercise without sets (routine order), else the last pending one.
@@ -73,7 +75,7 @@ export function WorkoutSheet({ session, exercises, routineName, onHide }: Workou
       message: withoutSets > 0 ? `Los ejercicios sin series (${withoutSets}) no se guardan.` : undefined,
       confirmLabel: 'Terminar entrenamiento',
     })
-    if (confirmed) await finishSession(session.id)
+    if (confirmed) onFinished(await finishSession(session.id))
   }
 
   async function discard() {

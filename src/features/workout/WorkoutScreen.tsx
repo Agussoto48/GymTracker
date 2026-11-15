@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { useExercises } from '../../data/exercises.ts'
 import { useRoutines } from '../../data/routines.ts'
+import { summarizeSession } from '../../domain/history.ts'
+import type { WorkoutSession } from '../../domain/types.ts'
 import { startSession, useActiveSession } from '../../data/sessions.ts'
-import { formatLongDate, formatTime, minutesBetween } from '../../shared/lib/format.ts'
+import { count, formatLongDate, formatTime, minutesBetween } from '../../shared/lib/format.ts'
 import { useNow } from '../../shared/lib/useNow.ts'
+import { AlertDialog } from '../../shared/ui/AlertDialog.tsx'
 import { Button } from '../../shared/ui/Button.tsx'
 import { EmptyState } from '../../shared/ui/EmptyState.tsx'
 import { ScreenHeader } from '../../shared/ui/ScreenHeader.tsx'
@@ -19,6 +22,8 @@ export function WorkoutScreen() {
   const exercises = useExercises()
   const routines = useRoutines()
   const [open, setOpen] = useState(false)
+  // The workout just finished: shown once as a congratulation with its summary.
+  const [finished, setFinished] = useState<WorkoutSession | null>(null)
   const activeRoutines = routines?.filter((r) => r.archivedAt === null) ?? []
   const sessionRoutine = session?.routineId ? routines?.find((r) => r.id === session.routineId) : undefined
   const sessionName = sessionRoutine?.name ?? (session?.routineId ? 'Rutina' : 'Entrenamiento libre')
@@ -120,8 +125,28 @@ export function WorkoutScreen() {
           exercises={exercises}
           routineName={session.routineId ? sessionName : null}
           onHide={() => setOpen(false)}
+          onFinished={(done) => {
+            setOpen(false)
+            setFinished(done)
+          }}
+        />
+      )}
+
+      {finished && (
+        <AlertDialog
+          title="¡Entrenamiento terminado!"
+          message={finishedMessage(finished)}
+          actionLabel="Listo"
+          onClose={() => setFinished(null)}
         />
       )}
     </>
   )
+}
+
+/** "Felicidades: hiciste 12 series en 54 min. Lo encontrarás en el Historial." (no duration under a minute) */
+function finishedMessage(session: WorkoutSession): string {
+  const { setCount, durationMinutes } = summarizeSession(session)
+  const duration = durationMinutes ? ` en ${durationMinutes} min` : ''
+  return `Felicidades: hiciste ${count(setCount, 'serie', 'series')}${duration}. Lo encontrarás en el Historial.`
 }
