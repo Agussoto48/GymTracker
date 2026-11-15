@@ -6,7 +6,7 @@
 
 .set {
   display: grid;
-  grid-template-columns: 2ch 1fr auto;
+  grid-template-columns: 2ch 1fr;
   align-items: center;
   gap: var(--space-3);
   min-height: 40px;
@@ -25,9 +25,4 @@
 .value {
   font-size: var(--text-headline);
   font-weight: 600;
-}
-
-.rpe {
-  color: var(--label-2);
-  font-size: var(--text-footnote);
 }

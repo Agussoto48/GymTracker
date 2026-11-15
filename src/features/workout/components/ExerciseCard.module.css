@@ -115,7 +115,7 @@
 
 .set {
   display: grid;
-  grid-template-columns: 2ch 1fr auto auto;
+  grid-template-columns: 2ch 1fr auto;
   align-items: center;
   gap: var(--space-3);
   width: 100%;
@@ -135,11 +135,6 @@
 .setValue {
   font-size: var(--text-headline);
   font-weight: 600;
-}
-
-.setRpe {
-  color: var(--label-2);
-  font-size: var(--text-footnote);
 }
 
 .check {

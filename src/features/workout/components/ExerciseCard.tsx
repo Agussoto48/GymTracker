@@ -11,7 +11,7 @@ import {
   updateSet,
   useLastPerformance,
 } from '../../../data/sessions.ts'
-import { count, formatNumber, formatSet, formatShortDate, formatTarget } from '../../../shared/lib/format.ts'
+import { count, formatSet, formatShortDate, formatTarget } from '../../../shared/lib/format.ts'
 import { ActionSheet, type SheetAction } from '../../../shared/ui/ActionSheet.tsx'
 import { MoreButton } from '../../../shared/ui/MoreButton.tsx'
 import { useConfirm } from '../../../shared/ui/useConfirm.tsx'
@@ -176,11 +176,10 @@ export function ExerciseCard({
                 type="button"
                 className={`${styles.set} figures`}
                 onClick={() => setEditing({ set, index })}
-                aria-label={`Serie ${index + 1}: ${formatSet(set, exercise.kind)}${set.rpe ? `, RPE ${formatNumber(set.rpe)}` : ''}. Editar`}
+                aria-label={`Serie ${index + 1}: ${formatSet(set, exercise.kind)}. Editar`}
               >
                 <span className={styles.setNumber}>{index + 1}</span>
                 <span className={styles.setValue}>{formatSet(set, exercise.kind)}</span>
-                <span className={styles.setRpe}>{set.rpe ? `RPE ${formatNumber(set.rpe)}` : ''}</span>
                 <span className={styles.check} aria-hidden="true">
                   ✓
                 </span>

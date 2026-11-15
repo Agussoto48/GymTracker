@@ -61,7 +61,6 @@
 /* Filled fields have no border; with Increase Contrast they get one so their edges stay visible. */
 @media (prefers-contrast: more) {
   .number,
-  .chip,
   .steppers button {
     border: 2px solid var(--separator);
   }
@@ -87,57 +86,6 @@
   font-weight: 600;
   cursor: pointer;
   touch-action: manipulation;
-}
-
-/* One row: label + chips that scroll sideways to the card edge. */
-.rpe {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin-right: calc(-1 * var(--space-4));
-}
-
-.rpeLabel {
-  flex-shrink: 0;
-  color: var(--label-2);
-  font-size: var(--text-footnote);
-  font-weight: 600;
-}
-
-.rpeOptions {
-  display: flex;
-  gap: var(--space-2);
-  min-width: 0;
-  padding-right: var(--space-4);
-  overflow-x: auto;
-  scroll-snap-type: x proximity;
-  scrollbar-width: none;
-}
-
-.rpeOptions::-webkit-scrollbar {
-  display: none;
-}
-
-.chip {
-  flex: 0 0 auto;
-  min-width: var(--tap);
-  min-height: var(--tap);
-  padding: 0 var(--space-2);
-  border: 2px solid transparent;
-  border-radius: 999px;
-  background: var(--surface-2);
-  color: var(--label);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  scroll-snap-align: start;
-  cursor: pointer;
-}
-
-/* Selected chip: inverted colors plus bold border, not color alone. */
-.chip[aria-pressed='true'] {
-  border: 2px solid var(--label);
-  background: var(--label);
-  color: var(--surface);
 }
 
 .error {

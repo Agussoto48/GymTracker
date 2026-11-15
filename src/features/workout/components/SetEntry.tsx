@@ -1,7 +1,6 @@
 import { useId, useState } from 'react'
 import type { ExerciseKind, WeightUnit } from '../../../domain/types.ts'
 import {
-  RPE_OPTIONS,
   WEIGHT_STEP,
   parseDecimal,
   stepWeight,
@@ -37,7 +36,8 @@ export function SetEntry({ title, kind, defaultUnit, suggestion, initial, onSubm
   const [weightText, setWeightText] = useState(toText(initial?.weight))
   const [repsText, setRepsText] = useState(toText(initial?.reps))
   const [unit, setUnit] = useState<WeightUnit>(initial?.unit ?? suggestion?.weight?.unit ?? defaultUnit)
-  const [rpe, setRpe] = useState<number | null>(initial?.rpe ?? null)
+  // RPE is hidden for now (user's call); editing a set keeps the one it already had.
+  const rpe = initial?.rpe ?? null
   const [errors, setErrors] = useState<SetErrors>({})
   const [failed, setFailed] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -71,7 +71,6 @@ export function SetEntry({ title, kind, defaultUnit, suggestion, initial, onSubm
       if (!initial) {
         setWeightText('')
         setRepsText('')
-        setRpe(null)
       }
     } catch (error) {
       if (error instanceof ValidationError) setErrors(error.errors)
@@ -139,25 +138,6 @@ export function SetEntry({ title, kind, defaultUnit, suggestion, initial, onSubm
               +
             </button>
           </div>
-        </div>
-      </div>
-
-      <div className={styles.rpe} role="group" aria-label="RPE (opcional)">
-        <span className={styles.rpeLabel} aria-hidden="true">
-          RPE
-        </span>
-        <div className={styles.rpeOptions}>
-          {RPE_OPTIONS.map((value) => (
-            <button
-              key={value}
-              type="button"
-              className={styles.chip}
-              aria-pressed={rpe === value}
-              onClick={() => setRpe(rpe === value ? null : value)}
-            >
-              {formatNumber(value)}
-            </button>
-          ))}
         </div>
       </div>
 
