@@ -1,0 +1,96 @@
+/* Full-screen like Sheet and ActionSheet (iOS Safari sizes modal dialogs unreliably); the card is centered. */
+.dialog[open] {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: var(--space-6);
+  border: 0;
+  background: transparent;
+  color: var(--label);
+}
+
+.dialog:focus {
+  outline: none;
+}
+
+.dialog::backdrop {
+  background: rgb(0 0 0 / 0.4);
+}
+
+/*
+ * Glass, as iOS alerts (Liquid Glass "regular": the functional layer, text on top). Fill opaque enough
+ * that the text keeps its contrast over anything dimmed behind it; fully opaque when the person asks
+ * for more contrast or less transparency.
+ */
+.card {
+  display: grid;
+  gap: var(--space-2);
+  width: min(100%, 320px);
+  padding: var(--space-6) 20px 20px;
+  border: 1px solid light-dark(rgb(255 255 255 / 0.7), rgb(255 255 255 / 0.12));
+  border-radius: 34px;
+  background: light-dark(rgb(250 250 252 / 0.9), rgb(44 44 46 / 0.9)); /* message (--label-2) ≥ 4.6:1 over anything dimmed behind */
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  backdrop-filter: blur(24px) saturate(1.4);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.25);
+  animation: appear 200ms ease-out;
+}
+
+@keyframes appear {
+  from {
+    transform: scale(1.06);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation: none;
+  }
+}
+
+@media (prefers-contrast: more), (prefers-reduced-transparency: reduce) {
+  .card {
+    border-color: var(--separator);
+    background: light-dark(#ffffff, #2c2c2e);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+.title {
+  font-size: var(--text-headline);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.message {
+  color: var(--label-2);
+  font-size: var(--text-subhead);
+  line-height: 1.35;
+}
+
+/* The one action: accent capsule, full width (default button of an iOS alert). */
+.button {
+  min-height: 50px;
+  margin-top: var(--space-4);
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: var(--text-body);
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.button:active {
+  filter: brightness(0.92);
+}
