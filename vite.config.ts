@@ -13,6 +13,12 @@ export default defineConfig(({ command, isPreview }) => {
       // Shown in the app so the user can tell which version is running (and that an update applied).
       __APP_BUILD_TIME__: JSON.stringify(new Date().toISOString()),
     },
+    server: {
+      // Some editors/tools write a file in two steps (truncate, then write). The watcher fires on the
+      // first, Vite caches the empty module, and the second change is dropped (<50 ms apart): blank
+      // page ("doesn't provide an export named …") until the file changes again. Wait for the write.
+      watch: { awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 20 } },
+    },
     plugins: [
       react(),
       // Offline strategy and update flow: docs/adr/0004 (local). Workout data lives in IndexedDB, never in this cache.
