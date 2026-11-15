@@ -40,6 +40,13 @@ export function formatShortDate(iso: string): string {
     .replace(/[.,]/g, '')
 }
 
+/** Date tile of a history row: { weekday: "vie", day: "14" } */
+export function formatDayTile(iso: string): { weekday: string; day: string } {
+  const date = new Date(iso)
+  const weekday = new Intl.DateTimeFormat('es', { weekday: 'short' }).format(date).replace('.', '')
+  return { weekday, day: String(date.getDate()) }
+}
+
 /** "18:05" */
 export function formatTime(iso: string): string {
   return new Intl.DateTimeFormat('es', { hour: '2-digit', minute: '2-digit' }).format(new Date(iso))

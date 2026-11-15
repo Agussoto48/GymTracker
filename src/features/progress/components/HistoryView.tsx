@@ -1,27 +1,31 @@
 import { useMemo, useState } from 'react'
-import { groupByMonth } from '../../domain/history.ts'
-import type { Id } from '../../domain/types.ts'
-import { useExercises } from '../../data/exercises.ts'
-import { useRoutines } from '../../data/routines.ts'
-import { useFinishedSessions } from '../../data/sessions.ts'
-import { formatMonth, formatShortDate } from '../../shared/lib/format.ts'
-import { Button } from '../../shared/ui/Button.tsx'
-import { EmptyState } from '../../shared/ui/EmptyState.tsx'
-import { ScreenHeader } from '../../shared/ui/ScreenHeader.tsx'
-import { Section } from '../../shared/ui/Section.tsx'
-import { BackupSheet } from './components/BackupSheet.tsx'
-import { SessionList } from './components/SessionList.tsx'
-import { SessionSheet } from './components/SessionSheet.tsx'
-import { useBackupStatus } from './hooks/useBackupStatus.ts'
-import styles from './HistoryScreen.module.css'
+import { groupByMonth } from '../../../domain/history.ts'
+import type { Id } from '../../../domain/types.ts'
+import { useExercises } from '../../../data/exercises.ts'
+import { useRoutines } from '../../../data/routines.ts'
+import { useFinishedSessions } from '../../../data/sessions.ts'
+import { count, formatMonth, formatShortDate } from '../../../shared/lib/format.ts'
+import { EmptyState } from '../../../shared/ui/EmptyState.tsx'
+import { Section } from '../../../shared/ui/Section.tsx'
+import type { BackupStatus } from '../hooks/useBackupStatus.ts'
+import { SessionList } from './SessionList.tsx'
+import { SessionSheet } from './SessionSheet.tsx'
+import styles from './HistoryView.module.css'
 
-export function HistoryScreen() {
+type HistoryViewProps = {
+  backup: BackupStatus
+  onOpenBackup: () => void
+}
+
+/**
+ * Finished workouts by month, newest first; tapping one opens its detail.
+ * Future filters (date, routine, exercise) go between the view switcher and the backup reminder.
+ */
+export function HistoryView({ backup, onOpenBackup }: HistoryViewProps) {
   const sessions = useFinishedSessions()
   const exercises = useExercises()
   const routines = useRoutines()
   const [selectedId, setSelectedId] = useState<Id | null>(null)
-  const [backupOpen, setBackupOpen] = useState(false)
-  const backup = useBackupStatus()
 
   const groups = useMemo(() => groupByMonth(sessions ?? []), [sessions])
   const exerciseById = useMemo(() => new Map(exercises?.map((e) => [e.id, e])), [exercises])
@@ -31,10 +35,8 @@ export function HistoryScreen() {
 
   return (
     <>
-      <ScreenHeader title="Historial" action={<Button onClick={() => setBackupOpen(true)}>Respaldo</Button>} />
-
       {backup.stale && (
-        <button type="button" className={styles.reminder} onClick={() => setBackupOpen(true)}>
+        <button type="button" className={styles.reminder} onClick={onOpenBackup}>
           <span className={styles.reminderText}>
             <span className={styles.reminderTitle}>Haz un respaldo</span>
             <span className={styles.reminderMeta}>
@@ -55,13 +57,14 @@ export function HistoryScreen() {
       )}
 
       {groups.map((group) => (
-        <Section key={group.month} title={formatMonth(group.month)}>
+        <Section
+          key={group.month}
+          title={formatMonth(group.month)}
+          detail={count(group.sessions.length, 'entrenamiento', 'entrenamientos')}
+        >
           <SessionList sessions={group.sessions} routineNames={routineNames} onSelect={setSelectedId} />
         </Section>
       ))}
-
-
-      {backupOpen && <BackupSheet status={backup} onClose={() => setBackupOpen(false)} />}
 
       {selected && exercises && (
         <SessionSheet

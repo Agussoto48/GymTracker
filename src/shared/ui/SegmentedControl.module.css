@@ -16,7 +16,7 @@
 
 .segments {
   display: grid;
-  grid-auto-columns: 1fr;
+  grid-auto-columns: minmax(0, 1fr); /* equal widths even when a label is longer than its segment */
   grid-auto-flow: column;
   gap: 2px;
   padding: 2px;
@@ -37,6 +37,12 @@
   font-weight: 600;
   text-align: center;
   cursor: pointer;
+}
+
+.segment span {
+  min-width: 0;
+  overflow-wrap: break-word; /* large text: hyphenate a long label instead of clipping it */
+  hyphens: auto;
 }
 
 .segment input {

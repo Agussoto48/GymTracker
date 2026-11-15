@@ -1,0 +1,34 @@
+/* Two columns on an iPhone; one when text is large (rem follows Dynamic Type). */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Per-exercise statistics will hold charts and lists: full width. */
+.wide {
+  grid-template-columns: 1fr;
+}
+
+.tile {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.title {
+  font-size: var(--text-subhead);
+  font-weight: 600;
+}
+
+.description {
+  color: var(--label-2);
+  font-size: var(--text-footnote);
+  text-wrap: pretty;
+}

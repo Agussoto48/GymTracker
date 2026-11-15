@@ -1,0 +1,82 @@
+.list {
+  --date-width: 2.75rem; /* 44 at the default size; grows with Dynamic Type */
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  background: none;
+  text-align: start;
+  cursor: pointer;
+}
+
+/* Separator inset to the text, as in iOS lists: the date tiles read as one column. */
+.list li + li .row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: calc(var(--space-4) + var(--date-width) + var(--space-3));
+  border-top: 1px solid var(--separator);
+}
+
+.row:active {
+  background: var(--surface-2);
+}
+
+/* Calendar-like date tile: short weekday over the day of the month. */
+.date {
+  display: grid;
+  flex-shrink: 0;
+  justify-items: center;
+  width: var(--date-width);
+  line-height: 1.1;
+}
+
+.weekday {
+  color: var(--label-2);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.day {
+  font-size: var(--text-title);
+  font-weight: 600;
+}
+
+.text {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.name {
+  font-weight: 600;
+  overflow-wrap: break-word; /* split a word only if it cannot fit on its own line */
+}
+
+/* Wraps instead of truncating, so it survives large text sizes. */
+.meta {
+  color: var(--label-2);
+  font-size: var(--text-footnote);
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--label-3);
+}

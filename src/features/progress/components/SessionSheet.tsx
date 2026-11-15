@@ -2,12 +2,12 @@ import { useState } from 'react'
 import { summarizeSession } from '../../../domain/history.ts'
 import type { Exercise, Id, WorkoutSession } from '../../../domain/types.ts'
 import { deleteFinishedSession } from '../../../data/sessions.ts'
-import { count, formatDuration, formatLongDate, formatShortDate, formatTime } from '../../../shared/lib/format.ts'
+import { count, formatLongDate, formatShortDate, formatTime } from '../../../shared/lib/format.ts'
 import { useConfirm } from '../../../shared/ui/useConfirm.tsx'
 import { RowButton } from '../../../shared/ui/RowButton.tsx'
 import { Sheet } from '../../../shared/ui/Sheet.tsx'
 import { ExerciseHistory } from './ExerciseHistory.tsx'
-import { sessionName } from './sessionName.ts'
+import { sessionMeta, sessionName } from './sessionText.ts'
 import { SetList } from './SetList.tsx'
 import styles from './SessionSheet.module.css'
 
@@ -28,7 +28,10 @@ export function SessionSheet({ session, exerciseById, routineNames, onClose }: S
   async function remove() {
     const confirmed = await confirm({
       title: `¿Eliminar el entrenamiento del ${formatShortDate(session.startedAt)}?`,
-      message: `Se borrarán sus ${count(summary.setCount, 'serie', 'series')}. No se puede deshacer.`,
+      message:
+        summary.setCount > 0
+          ? `Se borrarán sus ${count(summary.setCount, 'serie', 'series')}. No se puede deshacer.`
+          : 'No se puede deshacer.',
       confirmLabel: 'Eliminar entrenamiento',
       destructive: true,
     })
@@ -57,10 +60,14 @@ export function SessionSheet({ session, exerciseById, routineNames, onClose }: S
             <p className={`${styles.meta} figures`}>
               {formatTime(session.startedAt)}
               {session.finishedAt && `–${formatTime(session.finishedAt)}`}
-              {summary.durationMinutes !== null && ` · ${formatDuration(summary.durationMinutes)}`}
-              {` · ${count(summary.exerciseCount, 'ejercicio', 'ejercicios')} · ${count(summary.setCount, 'serie', 'series')}`}
+              {` · ${sessionMeta(summary)}`}
             </p>
           </div>
+
+          {/* Only an old backup can bring a workout without sets: say so and point to deleting it. */}
+          {summary.setCount === 0 && (
+            <p className={styles.empty}>Este entrenamiento no tiene series anotadas. Si fue un error, puedes eliminarlo.</p>
+          )}
 
           <div className={styles.exercises}>
             {session.exercises.map((entry) => {
@@ -85,7 +92,11 @@ export function SessionSheet({ session, exerciseById, routineNames, onClose }: S
                     )}
                   </h3>
                   {entry.notes && <p className={styles.note}>{entry.notes}</p>}
-                  <SetList sets={entry.sets} kind={exercise?.kind ?? 'weighted'} />
+                  {entry.sets.length > 0 ? (
+                    <SetList sets={entry.sets} kind={exercise?.kind ?? 'weighted'} />
+                  ) : (
+                    <p className={styles.note}>Sin series.</p>
+                  )}
                 </section>
               )
             })}

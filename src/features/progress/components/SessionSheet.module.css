@@ -65,6 +65,14 @@
   font-style: italic;
 }
 
+.empty {
+  margin-top: var(--space-6);
+  padding: 0 var(--space-1);
+  color: var(--label-2);
+  font-size: var(--text-subhead);
+  text-wrap: pretty;
+}
+
 .manage {
   display: grid;
   gap: var(--space-2);

@@ -1,7 +1,7 @@
 import type { Exercise, Id } from '../../../domain/types.ts'
 import { useExerciseHistory } from '../../../data/sessions.ts'
 import { count, formatSet, formatShortDate } from '../../../shared/lib/format.ts'
-import { sessionName } from './sessionName.ts'
+import { sessionName } from './sessionText.ts'
 import styles from './ExerciseHistory.module.css'
 
 type ExerciseHistoryProps = {

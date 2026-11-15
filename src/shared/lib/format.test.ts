@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { count, formatDuration, formatMonth, formatSet, formatTarget } from './format.ts'
+import { count, formatDayTile, formatDuration, formatMonth, formatSet, formatTarget } from './format.ts'
 
 describe('formatDuration', () => {
   test.each([
@@ -36,4 +36,9 @@ test('formatTarget shows only the parts that are set', () => {
   expect(formatTarget({ ...base, sets: 3 })).toBe('3 series')
   expect(formatTarget({ ...base, reps: 8, weight: 5, kind: 'bodyweight' })).toBe('8 reps · +5 kg')
   expect(formatTarget({ ...base, weight: 0, kind: 'bodyweight' })).toBe('')
+})
+
+test('formatDayTile gives the short weekday and the day of the month (local time)', () => {
+  expect(formatDayTile(new Date(2026, 10, 14, 18, 5).toISOString())).toEqual({ weekday: 'sáb', day: '14' })
+  expect(formatDayTile(new Date(2026, 10, 2, 0, 30).toISOString())).toEqual({ weekday: 'lun', day: '2' })
 })

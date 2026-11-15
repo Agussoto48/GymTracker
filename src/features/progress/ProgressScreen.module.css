@@ -1,0 +1,20 @@
+/* The header already leaves 24 px below the title; the switcher keeps the same rhythm before the content. */
+.switcher {
+  margin-bottom: var(--space-6);
+}
+
+.fadeIn {
+  animation: fade-in 180ms ease-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fadeIn {
+    animation: none;
+  }
+}

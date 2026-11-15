@@ -1,6 +1,6 @@
 import { useState, type ComponentType } from 'react'
 import { ExercisesScreen } from '../features/exercises/ExercisesScreen.tsx'
-import { HistoryScreen } from '../features/history/HistoryScreen.tsx'
+import { ProgressScreen } from '../features/progress/ProgressScreen.tsx'
 import { RoutinesScreen } from '../features/routines/RoutinesScreen.tsx'
 import { WorkoutScreen } from '../features/workout/WorkoutScreen.tsx'
 import { ToastProvider } from '../shared/ui/Toast.tsx'
@@ -12,7 +12,7 @@ const SCREENS: Record<TabId, ComponentType> = {
   workout: WorkoutScreen,
   routines: RoutinesScreen,
   exercises: ExercisesScreen,
-  history: HistoryScreen,
+  progress: ProgressScreen,
 }
 
 export default function App() {

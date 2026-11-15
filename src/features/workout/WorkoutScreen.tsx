@@ -144,9 +144,9 @@ export function WorkoutScreen() {
   )
 }
 
-/** "Felicidades: hiciste 12 series en 54 min. Lo encontrarás en el Historial." (no duration under a minute) */
+/** "Felicidades: hiciste 12 series en 54 min. Lo encontrarás en Progreso." (no duration under a minute) */
 function finishedMessage(session: WorkoutSession): string {
   const { setCount, durationMinutes } = summarizeSession(session)
   const duration = durationMinutes ? ` en ${durationMinutes} min` : ''
-  return `Felicidades: hiciste ${count(setCount, 'serie', 'series')}${duration}. Lo encontrarás en el Historial.`
+  return `Felicidades: hiciste ${count(setCount, 'serie', 'series')}${duration}. Lo encontrarás en Progreso.`
 }

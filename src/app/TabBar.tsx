@@ -1,8 +1,8 @@
 import type { ComponentType } from 'react'
-import { ExercisesIcon, HistoryIcon, RoutinesIcon, WorkoutIcon } from '../shared/ui/icons.tsx'
+import { ExercisesIcon, ProgressIcon, RoutinesIcon, WorkoutIcon } from '../shared/ui/icons.tsx'
 import styles from './TabBar.module.css'
 
-export type TabId = 'workout' | 'routines' | 'exercises' | 'history'
+export type TabId = 'workout' | 'routines' | 'exercises' | 'progress'
 
 type Tab = { id: TabId; label: string; Icon: ComponentType<{ className?: string }> }
 
@@ -10,7 +10,7 @@ const TABS: readonly Tab[] = [
   { id: 'workout', label: 'Entrenar', Icon: WorkoutIcon },
   { id: 'routines', label: 'Rutinas', Icon: RoutinesIcon },
   { id: 'exercises', label: 'Ejercicios', Icon: ExercisesIcon },
-  { id: 'history', label: 'Historial', Icon: HistoryIcon },
+  { id: 'progress', label: 'Progreso', Icon: ProgressIcon },
 ]
 
 type TabBarProps = {

@@ -8,10 +8,18 @@
 }
 
 .title {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 var(--space-3);
   color: var(--label-2);
   font-size: var(--text-footnote);
   font-weight: 600;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   padding: 0 var(--space-1);
+}
+
+.detail {
+  font-weight: 400;
 }

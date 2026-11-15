@@ -47,16 +47,13 @@ export function ExercisesIcon({ className }: IconProps) {
   )
 }
 
-export function HistoryIcon({ className }: IconProps) {
+/** Rising bars, like SF Symbols' chart.bar.fill: history now, statistics later. */
+export function ProgressIcon({ className }: IconProps) {
   return (
     <svg {...base} className={className}>
-      <path
-        fillRule="evenodd"
-        d="M6 5h12a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3Zm-1 5v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8Z"
-      />
-      <rect x="7" y="2.5" width="2" height="4" rx="1" />
-      <rect x="15" y="2.5" width="2" height="4" rx="1" />
-      <rect x="7" y="12" width="3" height="3" rx="0.75" />
+      <rect x="3" y="13" width="5" height="8" rx="1.5" />
+      <rect x="9.5" y="8" width="5" height="13" rx="1.5" />
+      <rect x="16" y="3" width="5" height="18" rx="1.5" />
     </svg>
   )
 }
