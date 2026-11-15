@@ -5,7 +5,7 @@ import { summarizeSession } from '../../domain/history.ts'
 import { startableExerciseIds } from '../../domain/routine.ts'
 import type { Routine, WorkoutSession } from '../../domain/types.ts'
 import { startSession, useActiveSession } from '../../data/sessions.ts'
-import { count, formatLongDate, formatTime, minutesBetween } from '../../shared/lib/format.ts'
+import { count, formatTime, minutesBetween } from '../../shared/lib/format.ts'
 import { useNow } from '../../shared/lib/useNow.ts'
 import { AlertDialog } from '../../shared/ui/AlertDialog.tsx'
 import { Button } from '../../shared/ui/Button.tsx'
@@ -16,8 +16,6 @@ import { WorkoutSheet } from './components/WorkoutSheet.tsx'
 import styles from './WorkoutScreen.module.css'
 
 export function WorkoutScreen() {
-  // Computed once on mount, not on every render.
-  const [today] = useState(() => formatLongDate(new Date()))
   const now = useNow()
   const session = useActiveSession()
   const exercises = useExercises()
@@ -53,7 +51,7 @@ export function WorkoutScreen() {
 
   return (
     <>
-      <ScreenHeader title="Entrenar" subtitle={today} />
+      <ScreenHeader title="Entrenar" />
 
       {session && !inProgressId && (
         <Section title="En curso">

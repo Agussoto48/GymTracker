@@ -19,12 +19,6 @@
   gap: var(--space-3);
 }
 
-.subtitle {
-  color: var(--label-2);
-  font-size: var(--text-subhead);
-  font-weight: 600;
-}
-
 .title {
   font-size: var(--text-large-title);
   font-weight: 700;
