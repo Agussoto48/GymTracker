@@ -28,6 +28,7 @@ function session(id: string, startedAt: string, finished: boolean, sets: Workout
   return withDerivedExerciseIds({
     id,
     routineId: null,
+    routineName: null,
     startedAt,
     finishedAt: finished ? startedAt : null,
     exercises: [{ exerciseId, notes: '', sets, finishedAt: null }],

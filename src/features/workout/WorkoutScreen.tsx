@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useExercises } from '../../data/exercises.ts'
 import { useRoutines } from '../../data/routines.ts'
 import { summarizeSession } from '../../domain/history.ts'
+import { startableExerciseIds } from '../../domain/routine.ts'
 import type { WorkoutSession } from '../../domain/types.ts'
 import { startSession, useActiveSession } from '../../data/sessions.ts'
 import { count, formatLongDate, formatTime, minutesBetween } from '../../shared/lib/format.ts'
@@ -26,7 +27,13 @@ export function WorkoutScreen() {
   const [finished, setFinished] = useState<WorkoutSession | null>(null)
   const activeRoutines = routines?.filter((r) => r.archivedAt === null) ?? []
   const sessionRoutine = session?.routineId ? routines?.find((r) => r.id === session.routineId) : undefined
-  const sessionName = sessionRoutine?.name ?? (session?.routineId ? 'Rutina' : 'Entrenamiento libre')
+  // A routine deleted mid-workout leaves its name on the session (data/routines.ts › deleteRoutine).
+  const sessionName =
+    sessionRoutine?.name ?? session?.routineName ?? (session?.routineId ? 'Rutina' : 'Entrenamiento libre')
+  const exerciseById = new Map(exercises?.map((e) => [e.id, e]))
+  // What "Empezar" would load: archived exercises are skipped, and with none left the routine can't start.
+  const startableCount = (exerciseIds: readonly string[]) =>
+    exercises ? startableExerciseIds(exerciseIds, exerciseById).length : exerciseIds.length
   // A routine workout is continued from its row; the "En curso" card is for free workouts
   // (or a routine archived meanwhile, which has no row).
   const inProgressId = activeRoutines.some((r) => r.id === session?.routineId) ? session?.routineId : null
@@ -75,8 +82,9 @@ export function WorkoutScreen() {
           <EmptyState variant="plain" message="Aquí aparecerán las rutinas que crees en la pestaña Rutinas." />
         ) : (
           <ul className={styles.routines}>
-            {shownRoutines.map((routine) =>
-              session && routine.id === inProgressId ? (
+            {shownRoutines.map((routine) => {
+              const startable = startableCount(routine.exerciseIds)
+              return session && routine.id === inProgressId ? (
                 <li key={routine.id} className={styles.routine}>
                   <span className={styles.routineText}>
                     <span className={styles.routineName}>{routine.name}</span>
@@ -98,20 +106,20 @@ export function WorkoutScreen() {
                   <span className={styles.routineText}>
                     <span className={styles.routineName}>{routine.name}</span>
                     <span className={styles.routineMeta}>
-                      {routine.exerciseIds.length} {routine.exerciseIds.length === 1 ? 'ejercicio' : 'ejercicios'}
+                      {startable === 0 ? 'Sus ejercicios están archivados' : count(startable, 'ejercicio', 'ejercicios')}
                     </span>
                   </span>
                   <Button
                     className={styles.startRoutine}
-                    disabled={Boolean(session)}
+                    disabled={Boolean(session) || startable === 0}
                     onClick={() => void start(routine.id)}
                     aria-label={`Empezar ${routine.name}`}
                   >
                     Empezar
                   </Button>
                 </li>
-              ),
-            )}
+              )
+            })}
           </ul>
         )}
         {othersBlocked && (
@@ -123,7 +131,7 @@ export function WorkoutScreen() {
         <WorkoutSheet
           session={session}
           exercises={exercises}
-          routineName={session.routineId ? sessionName : null}
+          routineName={session.routineId || session.routineName ? sessionName : null}
           onHide={() => setOpen(false)}
           onFinished={(done) => {
             setOpen(false)

@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import { ROUTINE_MAX_EXERCISES, ROUTINE_NAME_MAX_LENGTH, moveItem, validateRoutine } from './routine.ts'
+import { ROUTINE_MAX_EXERCISES, ROUTINE_NAME_MAX_LENGTH, moveItem, startableExerciseIds, validateRoutine } from './routine.ts'
+import type { Exercise } from './types.ts'
 
 describe('validateRoutine', () => {
   test('accepts a named routine and normalizes the name', () => {
@@ -37,5 +38,19 @@ describe('moveItem', () => {
     expect(moveItem(items, 0, -1)).toEqual(items)
     expect(moveItem(items, 3, 10)).toEqual(items)
     expect(moveItem(items, 9, 0)).toEqual(items)
+  })
+})
+
+describe('startableExerciseIds', () => {
+  const exercise = (id: string, archived = false) =>
+    [id, { id, archivedAt: archived ? '2026-11-14T10:00:00.000Z' : null } as Exercise] as const
+
+  test('keeps the routine order and skips archived or missing exercises', () => {
+    const byId = new Map([exercise('a'), exercise('b', true), exercise('c')])
+    expect(startableExerciseIds(['c', 'b', 'missing', 'a'], byId)).toEqual(['c', 'a'])
+  })
+
+  test('is empty when every exercise is archived', () => {
+    expect(startableExerciseIds(['b'], new Map([exercise('b', true)]))).toEqual([])
   })
 })

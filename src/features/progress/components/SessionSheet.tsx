@@ -46,7 +46,7 @@ export function SessionSheet({ session, exerciseById, routineNames, onClose }: S
 
   return (
     <Sheet
-      title={historyOf ? historyOf.name : sessionName(session.routineId, routineNames)}
+      title={historyOf ? historyOf.name : sessionName(session, routineNames)}
       closeLabel={historyOf ? '‹ Atrás' : 'Cerrar'}
       onClose={historyOf ? () => setHistoryOf(null) : onClose}
       viewKey={historyOf?.id ?? 'detail'}

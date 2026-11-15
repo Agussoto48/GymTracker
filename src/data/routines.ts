@@ -48,14 +48,22 @@ export async function setRoutineArchived(id: Id, archived: boolean): Promise<voi
   if (changed === 0) throw new NotFoundError('Routine', id)
 }
 
-/** A routine used by any workout is archived instead of deleted, to keep history meaningful. */
-export async function isRoutineUsed(id: Id): Promise<boolean> {
-  return (await db.sessions.filter((session) => session.routineId === id).count()) > 0
+/** How many workouts (finished or in progress) came from this routine. */
+export async function countRoutineWorkouts(id: Id): Promise<number> {
+  return db.sessions.filter((session) => session.routineId === id).count()
 }
 
+/**
+ * Deletes a routine. Its workouts stay in history: each one keeps the routine's name and stops
+ * pointing at it, in the same transaction (never a workout pointing at a missing routine).
+ */
 export async function deleteRoutine(id: Id): Promise<void> {
   await db.transaction('rw', db.routines, db.sessions, async () => {
-    if (await isRoutineUsed(id)) throw new Error('Routine has workouts; archive it instead.')
+    const routine = await db.routines.get(id)
+    if (!routine) throw new NotFoundError('Routine', id)
+    await db.sessions
+      .filter((session) => session.routineId === id)
+      .modify({ routineId: null, routineName: routine.name })
     await db.routines.delete(id)
   })
 }
@@ -68,6 +76,6 @@ export function useRoutines(): Routine[] | undefined {
   return useLiveQuery(listRoutines)
 }
 
-export function useRoutineUsed(id: Id | null): boolean | undefined {
-  return useLiveQuery(() => (id ? isRoutineUsed(id) : false), [id])
+export function useRoutineWorkoutCount(id: Id | null): number | undefined {
+  return useLiveQuery(() => (id ? countRoutineWorkouts(id) : 0), [id])
 }

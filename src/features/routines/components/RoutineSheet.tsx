@@ -7,7 +7,7 @@ import {
   deleteRoutine,
   setRoutineArchived,
   updateRoutine,
-  useRoutineUsed,
+  useRoutineWorkoutCount,
 } from '../../../data/routines.ts'
 import { ExercisePicker } from '../../../shared/ui/ExercisePicker.tsx'
 import { useConfirm } from '../../../shared/ui/useConfirm.tsx'
@@ -32,7 +32,7 @@ export function RoutineSheet({ routine, exercises, onClose }: RoutineSheetProps)
   const [formError, setFormError] = useState<string | null>(null)
   const [picking, setPicking] = useState(false)
   const [saving, setSaving] = useState(false)
-  const used = useRoutineUsed(routine?.id ?? null)
+  const workoutCount = useRoutineWorkoutCount(routine?.id ?? null)
   const [confirm, confirmSheet] = useConfirm()
   const toast = useToast()
   const byId = new Map(exercises.map((e) => [e.id, e]))
@@ -61,9 +61,16 @@ export function RoutineSheet({ routine, exercises, onClose }: RoutineSheetProps)
 
   async function handleDelete() {
     if (!routine) return
+    // Its workouts stay in history under its name (data/routines.ts › deleteRoutine).
+    const kept =
+      workoutCount === 1
+        ? ' Tu entrenamiento con ella sigue en el historial y tus ejercicios no se borran.'
+        : workoutCount
+          ? ` Tus ${workoutCount} entrenamientos con ella siguen en el historial y tus ejercicios no se borran.`
+          : ' Tus ejercicios no se borran.'
     const confirmed = await confirm({
       title: `¿Eliminar la rutina «${routine.name}»?`,
-      message: 'Tus ejercicios no se borran.',
+      message: `La rutina no se puede recuperar.${kept}`,
       confirmLabel: 'Eliminar rutina',
       destructive: true,
     })
@@ -189,12 +196,17 @@ export function RoutineSheet({ routine, exercises, onClose }: RoutineSheetProps)
           >
             {routine.archivedAt === null ? 'Archivar rutina' : 'Restaurar rutina'}
           </RowButton>
-          {used === false && (
-            <RowButton tone="destructive" disabled={saving} onClick={() => void handleDelete()}>
-              Eliminar rutina
-            </RowButton>
-          )}
-          {used && <p className={styles.hint}>Ya entrenaste con esta rutina: archívala para ocultarla sin perder el historial.</p>}
+          <RowButton
+            tone="destructive"
+            disabled={saving || workoutCount === undefined}
+            onClick={() => void handleDelete()}
+          >
+            Eliminar rutina
+          </RowButton>
+          <p className={styles.hint}>
+            {routine.archivedAt === null ? 'Archivar la oculta de Entrenar y se puede restaurar.' : 'Restaurar la devuelve a Entrenar.'}
+            {workoutCount ? ' Si la eliminas, sus entrenamientos siguen en el historial.' : ''}
+          </p>
         </div>
       )}
 

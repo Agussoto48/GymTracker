@@ -42,6 +42,7 @@ export function groupByMonth(sessions: readonly WorkoutSession[]): MonthGroup[] 
 export type ExerciseHistoryEntry = {
   sessionId: Id
   routineId: Id | null
+  routineName: string | null
   startedAt: IsoDateTime
   notes: string
   sets: WorkoutSet[]
@@ -60,6 +61,7 @@ export function exerciseHistory(sessions: readonly WorkoutSession[], exerciseId:
     entries.push({
       sessionId: session.id,
       routineId: session.routineId,
+      routineName: session.routineName,
       startedAt: session.startedAt,
       notes: entry.notes,
       sets: entry.sets,

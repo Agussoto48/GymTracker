@@ -24,7 +24,7 @@ export function ExerciseHistory({ exercise, currentSessionId, routineNames }: Ex
             {history.map((entry) => (
               <li key={entry.sessionId} className={styles.entry}>
                 <p className={styles.when}>
-                  {formatShortDate(entry.startedAt)} · {sessionName(entry.routineId, routineNames)}
+                  {formatShortDate(entry.startedAt)} · {sessionName(entry, routineNames)}
                   {entry.sessionId === currentSessionId && <span className={styles.current}> · este</span>}
                 </p>
                 <p className={`${styles.sets} figures`}>

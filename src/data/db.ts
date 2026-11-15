@@ -10,9 +10,13 @@ function withTargets(exercise: Partial<Exercise>) {
   return exercise
 }
 
-/** Session exercises written before v3 are pending: absent never reaches the app as undefined. */
-function withFinishedFlags(session: WorkoutSession) {
+/**
+ * Fields added to sessions after v1, so absent never reaches the app as undefined: session exercises
+ * written before v3 are pending, and sessions written before v4 have no deleted routine's name.
+ */
+function withSessionDefaults(session: WorkoutSession) {
   for (const entry of session.exercises as Partial<SessionExercise>[]) entry.finishedAt ??= null
+  ;(session as Partial<WorkoutSession>).routineName ??= null
   return session
 }
 
@@ -48,13 +52,24 @@ export class GymTrackerDb extends Dexie {
           .table('sessions')
           .toCollection()
           .modify((session: WorkoutSession) => {
-            withFinishedFlags(session)
+            withSessionDefaults(session)
+          }),
+      )
+    // v4: a session keeps the name of its routine when the routine is deleted (not indexed). None yet.
+    this.version(4)
+      .stores({})
+      .upgrade((tx) =>
+        tx
+          .table('sessions')
+          .toCollection()
+          .modify((session: WorkoutSession) => {
+            withSessionDefaults(session)
           }),
       )
     // A tab still running an older build can keep writing records without the new fields after an upgrade.
     // bulkGet also passes undefined for missing ids.
     this.exercises.hook('reading', (exercise?: Exercise) => (exercise ? (withTargets(exercise) as Exercise) : exercise))
-    this.sessions.hook('reading', (session?: WorkoutSession) => (session ? withFinishedFlags(session) : session))
+    this.sessions.hook('reading', (session?: WorkoutSession) => (session ? withSessionDefaults(session) : session))
   }
 }
 

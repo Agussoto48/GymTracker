@@ -2,10 +2,13 @@ import type { SessionSummary } from '../../../domain/history.ts'
 import type { Id } from '../../../domain/types.ts'
 import { count, formatDuration } from '../../../shared/lib/format.ts'
 
-/** Title of a workout: its routine's name, or "Entrenamiento libre". */
-export function sessionName(routineId: Id | null, routineNames: ReadonlyMap<Id, string>): string {
-  if (routineId === null) return 'Entrenamiento libre'
-  return routineNames.get(routineId) ?? 'Rutina'
+/** Title of a workout: its routine's name (kept when the routine was deleted), or "Entrenamiento libre". */
+export function sessionName(
+  { routineId, routineName }: { routineId: Id | null; routineName: string | null },
+  routineNames: ReadonlyMap<Id, string>,
+): string {
+  if (routineId !== null) return routineNames.get(routineId) ?? 'Rutina'
+  return routineName ?? 'Entrenamiento libre'
 }
 
 /**

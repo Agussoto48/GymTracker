@@ -2,12 +2,12 @@ import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, test } from 'vitest'
 import type { Exercise } from '../domain/types.ts'
 import { db } from './db.ts'
-import { ValidationError } from './errors.ts'
+import { NotFoundError, ValidationError } from './errors.ts'
 import { createExercise, deleteExercise, setExerciseArchived } from './exercises.ts'
 import {
   createRoutine,
   deleteRoutine,
-  isRoutineUsed,
+  countRoutineWorkouts,
   listRoutines,
   setRoutineArchived,
   updateRoutine,
@@ -52,18 +52,37 @@ describe('routine CRUD', () => {
     await expect(deleteExercise(bench.id)).rejects.toThrow()
   })
 
-  test('archives, and deletes only routines without workouts', async () => {
+  test('archives and deletes a routine without workouts', async () => {
     const push = await createRoutine({ name: 'Push', exerciseIds: [bench.id] })
     await setRoutineArchived(push.id, true)
     expect((await db.routines.get(push.id))?.archivedAt).not.toBeNull()
 
-    const legs = await createRoutine({ name: 'Pierna', exerciseIds: [row.id] })
-    await startSession(legs.id)
-    expect(await isRoutineUsed(legs.id)).toBe(true)
-    await expect(deleteRoutine(legs.id)).rejects.toThrow()
-
+    expect(await countRoutineWorkouts(push.id)).toBe(0)
     await deleteRoutine(push.id)
     expect(await db.routines.get(push.id)).toBeUndefined()
+    await expect(deleteRoutine(push.id)).rejects.toBeInstanceOf(NotFoundError)
+  })
+
+  test('deleting a used routine keeps its workouts, with its name', async () => {
+    const legs = await createRoutine({ name: 'Pierna', exerciseIds: [row.id] })
+    const push = await createRoutine({ name: 'Push', exerciseIds: [bench.id] })
+    const first = await startSession(legs.id)
+    await addSet(first.id, row.id, { weight: 50, unit: 'kg', reps: 10, rpe: null })
+    await finishSession(first.id)
+    const other = await startSession(push.id)
+    await addSet(other.id, bench.id, { weight: 60, unit: 'kg', reps: 8, rpe: null })
+    await finishSession(other.id)
+    const inProgress = await startSession(legs.id)
+    expect(await countRoutineWorkouts(legs.id)).toBe(2)
+
+    await deleteRoutine(legs.id)
+    expect(await db.routines.get(legs.id)).toBeUndefined()
+    for (const id of [first.id, inProgress.id]) {
+      expect(await db.sessions.get(id)).toMatchObject({ routineId: null, routineName: 'Pierna' })
+    }
+    expect((await db.sessions.get(first.id))?.exercises[0].sets).toHaveLength(1)
+    // Other routines' workouts are untouched.
+    expect(await db.sessions.get(other.id)).toMatchObject({ routineId: push.id, routineName: null })
   })
 })
 
@@ -75,6 +94,15 @@ describe('starting a workout from a routine', () => {
     expect(session.routineId).toBe(push.id)
     expect(session.exerciseIds).toEqual([pec.id, bench.id])
     expect(session.exercises.every((e) => e.sets.length === 0)).toBe(true)
+    expect(session.routineName).toBeNull()
+  })
+
+  test('a routine with every exercise archived does not start', async () => {
+    const back = await createRoutine({ name: 'Espalda', exerciseIds: [row.id, pec.id] })
+    await setExerciseArchived(row.id, true)
+    await setExerciseArchived(pec.id, true)
+    await expect(startSession(back.id)).rejects.toMatchObject({ errors: { routineId: expect.any(String) } })
+    expect(await db.sessions.count()).toBe(0)
   })
 
   test('"last time" is shared across routines', async () => {

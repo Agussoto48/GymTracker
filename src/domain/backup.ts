@@ -1,11 +1,12 @@
 import { validateExercise } from './exercise.ts'
 import { nameKey } from './names.ts'
-import { validateRoutine } from './routine.ts'
+import { ROUTINE_NAME_MAX_LENGTH, validateRoutine } from './routine.ts'
 import type { Exercise, Routine, SessionExercise, WorkoutSession, WorkoutSet } from './types.ts'
 import { SESSION_NOTES_MAX_LENGTH, validateSet, withDerivedExerciseIds } from './workout.ts'
 
 // Backup file format (ADR-0003). Bump FORMAT_VERSION when the shape changes and keep reading old ones.
-// Optional additions that older builds can ignore (an exercise's `finishedAt`) keep the version.
+// Optional additions that older builds can ignore (an exercise's `finishedAt`, a session's `routineName`)
+// keep the version.
 export const BACKUP_APP = 'gymtracker'
 export const BACKUP_FORMAT_VERSION = 1
 const MAX_ERRORS = 10
@@ -176,6 +177,17 @@ function parseSessions(
     if (item.routineId !== null && !(isId(item.routineId) && routineIds.has(item.routineId))) {
       return fail(`${where}: usa una rutina que no existe.`)
     }
+    // Absent in backups made before schema v4. Only a workout whose routine was deleted has one.
+    const routineName = item.routineName ?? null
+    if (
+      routineName !== null &&
+      (item.routineId !== null ||
+        typeof routineName !== 'string' ||
+        routineName.trim().length === 0 ||
+        routineName.length > ROUTINE_NAME_MAX_LENGTH)
+    ) {
+      return fail(`${where}: nombre de rutina inválido.`)
+    }
     if (!isIsoDate(item.startedAt) || !isOptionalIsoDate(item.finishedAt)) return fail(`${where}: fechas inválidas.`)
     if (item.finishedAt !== null && Date.parse(item.finishedAt) < Date.parse(item.startedAt)) {
       return fail(`${where}: termina antes de empezar.`)
@@ -228,6 +240,7 @@ function parseSessions(
       withDerivedExerciseIds({
         id: item.id,
         routineId: item.routineId,
+        routineName,
         startedAt: item.startedAt,
         finishedAt: item.finishedAt,
         exercises: entries,

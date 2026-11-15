@@ -27,7 +27,7 @@ export function SessionList({ sessions, routineNames, onSelect }: SessionListPro
               </span>
               <span className="visually-hidden">{formatLongDate(session.startedAt)}: </span>
               <span className={styles.text}>
-                <span className={styles.name}>{sessionName(session.routineId, routineNames)}</span>
+                <span className={styles.name}>{sessionName(session, routineNames)}</span>
                 <span className={`${styles.meta} figures`}>{sessionMeta(summary)}</span>
               </span>
               <svg className={styles.chevron} width="8" height="14" viewBox="0 0 8 14" aria-hidden="true">

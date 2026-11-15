@@ -20,7 +20,7 @@ function session(
   exercises: SessionExercise[],
   routineId: string | null = null,
 ): WorkoutSession {
-  return withDerivedExerciseIds({ id, routineId, startedAt, finishedAt, exercises, exerciseIds: [] })
+  return withDerivedExerciseIds({ id, routineId, routineName: null, startedAt, finishedAt, exercises, exerciseIds: [] })
 }
 
 describe('summarizeSession', () => {

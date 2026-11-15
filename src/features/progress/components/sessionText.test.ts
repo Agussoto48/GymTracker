@@ -1,11 +1,12 @@
 import { expect, test } from 'vitest'
 import { sessionMeta, sessionName } from './sessionText.ts'
 
-test('sessionName: routine name, free workout, or a deleted routine', () => {
+test('sessionName: routine name, a deleted routine\'s kept name, or free workout', () => {
   const names = new Map([['r1', 'Push']])
-  expect(sessionName('r1', names)).toBe('Push')
-  expect(sessionName(null, names)).toBe('Entrenamiento libre')
-  expect(sessionName('gone', names)).toBe('Rutina')
+  expect(sessionName({ routineId: 'r1', routineName: null }, names)).toBe('Push')
+  expect(sessionName({ routineId: null, routineName: 'Pierna' }, names)).toBe('Pierna')
+  expect(sessionName({ routineId: null, routineName: null }, names)).toBe('Entrenamiento libre')
+  expect(sessionName({ routineId: 'gone', routineName: null }, names)).toBe('Rutina')
 })
 
 test('sessionMeta lists exercises, sets and duration', () => {

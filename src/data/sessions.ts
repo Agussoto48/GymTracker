@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { exerciseHistory, type ExerciseHistoryEntry } from '../domain/history.ts'
+import { startableExerciseIds } from '../domain/routine.ts'
 import type { Id, WorkoutSession, WorkoutSet } from '../domain/types.ts'
 import {
   SESSION_NOTES_MAX_LENGTH,
@@ -22,6 +23,7 @@ export class ActiveSessionExistsError extends Error {
 }
 
 const now = () => new Date().toISOString()
+const NO_STARTABLE_EXERCISES = 'Sus ejercicios están archivados.'
 
 /** The workout in progress, if any (at most one, ADR-0003). */
 export async function getActiveSession(): Promise<WorkoutSession | undefined> {
@@ -32,7 +34,10 @@ export async function getActiveSession(): Promise<WorkoutSession | undefined> {
     .first()
 }
 
-/** Starts a free workout, or one prefilled with a routine's exercises (archived ones are skipped). */
+/**
+ * Starts a free workout, or one prefilled with a routine's exercises (archived ones are skipped).
+ * A routine with every exercise archived can't start: it would be an empty workout.
+ */
 export async function startSession(routineId: Id | null = null): Promise<WorkoutSession> {
   return db.transaction('rw', db.sessions, db.routines, db.exercises, async () => {
     if (await getActiveSession()) throw new ActiveSessionExistsError()
@@ -41,11 +46,14 @@ export async function startSession(routineId: Id | null = null): Promise<Workout
       const routine = await db.routines.get(routineId)
       if (!routine) throw new NotFoundError('Routine', routineId)
       const exercises = await db.exercises.bulkGet(routine.exerciseIds)
-      exerciseIds = exercises.filter((e) => e && e.archivedAt === null).map((e) => e!.id)
+      const byId = new Map(exercises.flatMap((e) => (e ? [[e.id, e] as const] : [])))
+      exerciseIds = startableExerciseIds(routine.exerciseIds, byId)
+      if (exerciseIds.length === 0) throw new ValidationError({ routineId: NO_STARTABLE_EXERCISES })
     }
     const session = withDerivedExerciseIds({
       id: createId(),
       routineId,
+      routineName: null,
       startedAt: now(),
       finishedAt: null,
       exercises: exerciseIds.map((exerciseId) => ({ exerciseId, notes: '', sets: [], finishedAt: null })),

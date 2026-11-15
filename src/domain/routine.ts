@@ -1,5 +1,5 @@
 import { normalizeName } from './names.ts'
-import type { Id, Routine } from './types.ts'
+import type { Exercise, Id, Routine } from './types.ts'
 
 export const ROUTINE_NAME_MAX_LENGTH = 60
 export const ROUTINE_MAX_EXERCISES = 30
@@ -39,4 +39,15 @@ export function moveItem<T>(items: readonly T[], from: number, to: number): T[] 
   const [item] = result.splice(from, 1)
   result.splice(target, 0, item)
   return result
+}
+
+/**
+ * The exercises a workout from this routine starts with: the ones that still exist and are not
+ * archived, in the routine's order. None left means the routine can't be started.
+ */
+export function startableExerciseIds(exerciseIds: readonly Id[], exerciseById: ReadonlyMap<Id, Exercise>): Id[] {
+  return exerciseIds.filter((id) => {
+    const exercise = exerciseById.get(id)
+    return exercise !== undefined && exercise.archivedAt === null
+  })
 }

@@ -18,6 +18,7 @@ function sessionWith(exerciseId: string): WorkoutSession {
   return {
     id: crypto.randomUUID(),
     routineId: null,
+    routineName: null,
     startedAt: new Date().toISOString(),
     finishedAt: null,
     exercises: [{ exerciseId, notes: '', sets: [], finishedAt: null }],

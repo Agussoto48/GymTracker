@@ -54,6 +54,24 @@ describe('parseBackup', () => {
     expect(result.data.sessions[0].exerciseIds).toEqual(['e1', 'e2'])
   })
 
+  test('a workout of a deleted routine keeps its name; older backups have none', () => {
+    const old = parse(file())
+    expect(old.ok && old.data.sessions[0].routineName).toBeNull()
+
+    const value = file()
+    Object.assign(value.data.sessions[0], { routineId: null, routineName: 'Pierna' })
+    const result = parse(value)
+    expect(result.ok && result.data.sessions[0]).toMatchObject({ routineId: null, routineName: 'Pierna' })
+  })
+
+  test('rejects a routine name next to an existing routine, or an empty or too long one', () => {
+    for (const patch of [{ routineName: 'Pierna' }, { routineId: null, routineName: ' ' }, { routineId: null, routineName: 'x'.repeat(61) }]) {
+      const value = file()
+      Object.assign(value.data.sessions[0], patch)
+      expect(firstError(value)).toMatch(/nombre de rutina inválido/)
+    }
+  })
+
   test('backups without targets (older format) import as none; present ones are kept', () => {
     const value = file()
     Object.assign(value.data.exercises[1], { targetWeight: 10, targetSets: 3, targetReps: 8, targetUpdatedAt: t })

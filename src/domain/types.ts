@@ -65,6 +65,11 @@ export type SessionExercise = {
 export type WorkoutSession = {
   id: Id
   routineId: Id | null
+  /**
+   * Name of the routine this workout came from once that routine is deleted (then `routineId` is null),
+   * so history keeps showing it. Null for free workouts and while the routine exists.
+   */
+  routineName: string | null
   startedAt: IsoDateTime
   finishedAt: IsoDateTime | null
   exercises: SessionExercise[]
