@@ -3,7 +3,7 @@ import { useExercises } from '../../data/exercises.ts'
 import { useRoutines } from '../../data/routines.ts'
 import { summarizeSession } from '../../domain/history.ts'
 import { startableExerciseIds } from '../../domain/routine.ts'
-import type { WorkoutSession } from '../../domain/types.ts'
+import type { Routine, WorkoutSession } from '../../domain/types.ts'
 import { startSession, useActiveSession } from '../../data/sessions.ts'
 import { count, formatLongDate, formatTime, minutesBetween } from '../../shared/lib/format.ts'
 import { useNow } from '../../shared/lib/useNow.ts'
@@ -25,6 +25,8 @@ export function WorkoutScreen() {
   const [open, setOpen] = useState(false)
   // The workout just finished: shown once as a congratulation with its summary.
   const [finished, setFinished] = useState<WorkoutSession | null>(null)
+  // Asked before starting, so a stray tap doesn't start the clock (routine null = free workout).
+  const [toStart, setToStart] = useState<{ routine: Routine | null } | null>(null)
   const activeRoutines = routines?.filter((r) => r.archivedAt === null) ?? []
   const sessionRoutine = session?.routineId ? routines?.find((r) => r.id === session.routineId) : undefined
   // A routine deleted mid-workout leaves its name on the session (data/routines.ts › deleteRoutine).
@@ -43,8 +45,9 @@ export function WorkoutScreen() {
     ? [...activeRoutines.filter((r) => r.id === inProgressId), ...activeRoutines.filter((r) => r.id !== inProgressId)]
     : activeRoutines
 
-  async function start(routineId: string | null = null) {
-    await startSession(routineId)
+  async function start(routine: Routine | null) {
+    setToStart(null)
+    await startSession(routine?.id ?? null)
     setOpen(true)
   }
 
@@ -70,7 +73,7 @@ export function WorkoutScreen() {
 
       {session === null && (
         <div className={styles.start}>
-          <Button variant="primary" onClick={() => void start()}>
+          <Button variant="primary" onClick={() => setToStart({ routine: null })}>
             Empezar entrenamiento libre
           </Button>
           <p className={styles.note}>Eliges los ejercicios de tu catálogo sobre la marcha.</p>
@@ -112,7 +115,7 @@ export function WorkoutScreen() {
                   <Button
                     className={styles.startRoutine}
                     disabled={Boolean(session) || startable === 0}
-                    onClick={() => void start(routine.id)}
+                    onClick={() => setToStart({ routine })}
                     aria-label={`Empezar ${routine.name}`}
                   >
                     Empezar
@@ -145,11 +148,33 @@ export function WorkoutScreen() {
           title="¡Entrenamiento terminado!"
           message={finishedMessage(finished)}
           actionLabel="Listo"
-          onClose={() => setFinished(null)}
+          onAction={() => setFinished(null)}
+        />
+      )}
+
+      {toStart && (
+        <AlertDialog
+          title={toStart.routine ? `¿Empezar la rutina «${toStart.routine.name}»?` : '¿Empezar un entrenamiento libre?'}
+          message={
+            toStart.routine
+              ? startMessage(toStart.routine.exerciseIds.length, startableCount(toStart.routine.exerciseIds))
+              : undefined
+          }
+          actionLabel="Empezar"
+          onAction={() => void start(toStart.routine)}
+          onCancel={() => setToStart(null)}
         />
       )}
     </>
   )
+}
+
+/** "Tiene 6 ejercicios." or, with archived ones skipped, "Tiene 5 ejercicios: 1 archivado no se incluye." */
+function startMessage(total: number, startable: number): string {
+  const archived = total - startable
+  const exercises = `Tiene ${count(startable, 'ejercicio', 'ejercicios')}`
+  if (archived === 0) return `${exercises}.`
+  return `${exercises}: ${archived === 1 ? '1 archivado no se incluye' : `${archived} archivados no se incluyen`}.`
 }
 
 /** "Felicidades: hiciste 12 series en 54 min. Lo encontrarás en Progreso." (no duration under a minute) */

@@ -7,6 +7,8 @@
   --surface: light-dark(#ffffff, #1c1c1e);
   --surface-2: light-dark(#e9e9ee, #2c2c2e);
   --separator: light-dark(#d4d4da, #3a3a3e);
+  /* Neutral fill for secondary buttons on glass (iOS Cancel); --label on it ≈ 14:1 light, ≈ 8.8:1 dark. */
+  --fill: light-dark(rgb(120 120 128 / 0.16), rgb(120 120 128 / 0.32));
   --thumb: light-dark(#ffffff, #636366); /* selected segment: lighter than its track in both modes */
 
   /* Content. Contrast on --surface: 18.0 / 6.4 / 3.7 (light), 15.5 / 6.7 / 4.1 (dark) */

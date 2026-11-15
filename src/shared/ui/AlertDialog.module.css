@@ -76,10 +76,22 @@
   line-height: 1.35;
 }
 
-/* The one action: accent capsule, full width (default button of an iOS alert). */
-.button {
-  min-height: 50px;
+/*
+ * Side by side, Cancel leading and the default trailing (HIG alerts › Buttons). When a label doesn't
+ * fit (large text), they stack with the default on top: wrap-reverse sends the first one (Cancel) down.
+ */
+.buttons {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  gap: var(--space-2);
   margin-top: var(--space-4);
+}
+
+/* The default action: accent capsule (default button of an iOS alert). */
+.button {
+  flex: 1 1 0;
+  min-width: max-content;
+  min-height: 50px;
   padding: 0 var(--space-4);
   border: 0;
   border-radius: 999px;
@@ -89,6 +101,13 @@
   font-weight: 700;
   cursor: pointer;
   touch-action: manipulation;
+}
+
+/* Cancel: neutral fill, never the accent (only one orange button). */
+.cancel {
+  background: var(--fill);
+  color: var(--label);
+  font-weight: 600;
 }
 
 .button:active {
