@@ -4,6 +4,7 @@ import { ProgressScreen } from '../features/progress/ProgressScreen.tsx'
 import { RoutinesScreen } from '../features/routines/RoutinesScreen.tsx'
 import { WorkoutScreen } from '../features/workout/WorkoutScreen.tsx'
 import { ToastProvider } from '../shared/ui/Toast.tsx'
+import { RotateNotice } from './RotateNotice.tsx'
 import { TabBar, type TabId } from './TabBar.tsx'
 import { UpdateBanner } from './UpdateBanner.tsx'
 import styles from './App.module.css'
@@ -26,6 +27,7 @@ export default function App() {
       </main>
       <UpdateBanner />
       <TabBar current={tab} onSelect={setTab} />
+      <RotateNotice />
     </ToastProvider>
   )
 }
