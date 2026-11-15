@@ -79,3 +79,16 @@ export function MoreIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+/**
+ * Disclosure chevron, pointing down (content hidden). Rotate it to point up when the content is
+ * shown (HIG disclosure-controls › Disclosure buttons). Stroked like SF Symbols' chevron, to match
+ * the weight of the semibold text next to it.
+ */
+export function ChevronIcon({ className }: IconProps) {
+  return (
+    <svg {...base} fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M6 9.5l6 6 6-6" />
+    </svg>
+  )
+}

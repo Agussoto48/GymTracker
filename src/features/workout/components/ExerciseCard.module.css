@@ -1,6 +1,6 @@
 .collapsed {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
   width: 100%;
@@ -14,6 +14,7 @@
 }
 
 .name {
+  flex: 1;
   font-weight: 600;
   min-width: 0;
   overflow-wrap: anywhere;
@@ -41,10 +42,45 @@
 }
 
 .head {
+  position: relative;
+}
+
+/* Disclosure chevron: same size and trailing position folded and open, so they line up. */
+.chevron {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--label-2);
+}
+
+.chevronUp {
+  transform: rotate(180deg);
+}
+
+.toggle {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: center;
   gap: var(--space-3);
+  width: 100%;
+  min-height: var(--tap);
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: start;
+  cursor: pointer;
+}
+
+/* Leaves room for "⋯" (32 px) between the title and the chevron. */
+.titleText {
+  flex: 1;
+  min-width: 0;
+  margin-right: calc(32px + var(--space-3));
+}
+
+.more {
+  position: absolute;
+  top: calc((var(--tap) - 32px) / 2);
+  right: calc(16px + var(--space-3));
 }
 
 .title {

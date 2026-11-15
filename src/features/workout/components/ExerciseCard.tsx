@@ -15,6 +15,7 @@ import { count, formatSet, formatShortDate, formatTarget } from '../../../shared
 import { ActionSheet, type SheetAction } from '../../../shared/ui/ActionSheet.tsx'
 import { MoreButton } from '../../../shared/ui/MoreButton.tsx'
 import { useConfirm } from '../../../shared/ui/useConfirm.tsx'
+import { ChevronIcon } from '../../../shared/ui/icons.tsx'
 import { RowButton } from '../../../shared/ui/RowButton.tsx'
 import { Sheet } from '../../../shared/ui/Sheet.tsx'
 import { TextField } from '../../../shared/ui/TextField.tsx'
@@ -27,6 +28,8 @@ type ExerciseCardProps = {
   exercise: Exercise
   expanded: boolean
   onExpand: () => void
+  /** Folds the open card (every card can be folded, so another one is easy to reach). */
+  onCollapse: () => void
   /** Bring the card's top under the sheet header when it opens (not on the sheet's first render). */
   scrollOnExpand: boolean
   /** After the person marks it as done, with the updated workout (to open the next exercise). */
@@ -46,6 +49,7 @@ export function ExerciseCard({
   exercise,
   expanded,
   onExpand,
+  onCollapse,
   scrollOnExpand,
   onFinished,
 }: ExerciseCardProps) {
@@ -56,6 +60,15 @@ export function ExerciseCard({
   const [menuOpen, setMenuOpen] = useState(false)
   const finished = entry.finishedAt !== null
   const cardRef = useRef<HTMLElement>(null)
+  const collapsedRef = useRef<HTMLButtonElement>(null)
+  // Keep keyboard and VoiceOver focus on the card when it folds (its toggle button is replaced).
+  const refocusOnCollapse = useRef(false)
+
+  useEffect(() => {
+    if (expanded || !refocusOnCollapse.current) return
+    refocusOnCollapse.current = false
+    collapsedRef.current?.focus({ preventScroll: true })
+  }, [expanded])
 
   useEffect(() => {
     const card = cardRef.current
@@ -71,7 +84,7 @@ export function ExerciseCard({
   if (!expanded) {
     const lastSet = entry.sets.at(-1)
     return (
-      <button type="button" className={styles.collapsed} onClick={onExpand}>
+      <button type="button" ref={collapsedRef} className={styles.collapsed} aria-expanded={false} onClick={onExpand}>
         <span className={styles.name}>
           {finished && (
             <span className={styles.done} aria-hidden="true">
@@ -85,6 +98,7 @@ export function ExerciseCard({
             ? `${entry.sets.length} ${entry.sets.length === 1 ? 'serie' : 'series'} · ${formatSet(lastSet, exercise.kind)}`
             : 'Sin series'}
         </span>
+        <ChevronIcon className={styles.chevron} />
       </button>
     )
   }
@@ -137,11 +151,26 @@ export function ExerciseCard({
 
   return (
     <section ref={cardRef} className={styles.card} aria-labelledby={`ex-${exercise.id}`}>
+      {/* The whole title row folds the card; "⋯" sits over the room the row leaves before the chevron,
+          so chevrons line up with the folded rows'. */}
       <div className={styles.head}>
         <h3 id={`ex-${exercise.id}`} className={styles.title}>
-          {exercise.name}
+          <button
+            type="button"
+            className={styles.toggle}
+            aria-expanded={true}
+            onClick={() => {
+              refocusOnCollapse.current = true
+              onCollapse()
+            }}
+          >
+            <span className={styles.titleText}>{exercise.name}</span>
+            <ChevronIcon className={`${styles.chevron} ${styles.chevronUp}`} />
+          </button>
         </h3>
-        <MoreButton variant="inline" label={`Opciones de ${exercise.name}`} onClick={() => setMenuOpen(true)} />
+        <div className={styles.more}>
+          <MoreButton variant="inline" label={`Opciones de ${exercise.name}`} onClick={() => setMenuOpen(true)} />
+        </div>
       </div>
       {exercise.notes && <p className={styles.fixedNote}>{exercise.notes}</p>}
       {targetText && <p className={`${styles.target} figures`}>Objetivo · {targetText}</p>}

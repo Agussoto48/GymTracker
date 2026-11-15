@@ -47,6 +47,7 @@ export function WorkoutSheet({ session, exercises, routineName, onHide }: Workou
         exercise={exercise}
         expanded={expandedId === entry.exerciseId}
         onExpand={() => expand(entry.exerciseId)}
+        onCollapse={() => setExpandedId(null)}
         scrollOnExpand={userExpanded}
         onFinished={(updated) => expand(exerciseToOpen(updated.exercises))}
       />
