@@ -13,6 +13,7 @@ import {
 } from '../../../data/sessions.ts'
 import { count, formatSet, formatShortDate, formatTarget } from '../../../shared/lib/format.ts'
 import { ActionSheet, type SheetAction } from '../../../shared/ui/ActionSheet.tsx'
+import { ExerciseSheet } from '../../../shared/ui/ExerciseSheet.tsx'
 import { MoreButton } from '../../../shared/ui/MoreButton.tsx'
 import { useConfirm } from '../../../shared/ui/useConfirm.tsx'
 import { ChevronIcon } from '../../../shared/ui/icons.tsx'
@@ -58,6 +59,8 @@ export function ExerciseCard({
   const [notes, setNotes] = useState(entry.notes)
   const [confirm, confirmSheet] = useConfirm()
   const [menuOpen, setMenuOpen] = useState(false)
+  // The exercise's settings (unit, targets…) change only here, never per set.
+  const [editingExercise, setEditingExercise] = useState(false)
   const finished = entry.finishedAt !== null
   const cardRef = useRef<HTMLElement>(null)
   const collapsedRef = useRef<HTMLButtonElement>(null)
@@ -139,6 +142,7 @@ export function ExerciseCard({
     finished
       ? { id: 'reopen', label: 'Reabrir ejercicio', disabled: !canReopen }
       : { id: 'finish', label: 'Finalizar ejercicio', disabled: !canFinish },
+    { id: 'edit', label: 'Editar ejercicio' },
     { id: 'remove', label: 'Quitar del entrenamiento', destructive: true },
   ]
 
@@ -146,6 +150,7 @@ export function ExerciseCard({
     setMenuOpen(false)
     if (actionId === 'finish') onFinished(await finishExercise(sessionId, exercise.id))
     if (actionId === 'reopen') await reopenExercise(sessionId, exercise.id)
+    if (actionId === 'edit') setEditingExercise(true)
     if (actionId === 'remove') await remove()
   }
 
@@ -293,6 +298,7 @@ export function ExerciseCard({
           onSelect={(actionId) => void onMenu(actionId)}
         />
       )}
+      {editingExercise && <ExerciseSheet exercise={exercise} onClose={() => setEditingExercise(false)} />}
       {confirmSheet}
     </section>
   )

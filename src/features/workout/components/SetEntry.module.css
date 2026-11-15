@@ -4,15 +4,7 @@
   gap: var(--space-4);
 }
 
-.head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
 .title {
-  min-width: 0;
   font-weight: 700;
 }
 

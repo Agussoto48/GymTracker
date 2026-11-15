@@ -10,7 +10,6 @@ import {
 } from '../../../domain/workout.ts'
 import { ValidationError } from '../../../data/errors.ts'
 import { formatNumber, formatSet } from '../../../shared/lib/format.ts'
-import { SegmentedControl } from '../../../shared/ui/SegmentedControl.tsx'
 import styles from './SetEntry.module.css'
 
 type SetEntryProps = {
@@ -24,18 +23,15 @@ type SetEntryProps = {
   onSubmit: (input: SetInput) => Promise<void>
 }
 
-const UNIT_OPTIONS = [
-  { value: 'kg', label: 'kg' },
-  { value: 'lb', label: 'lb' },
-] as const satisfies readonly { value: WeightUnit; label: string }[]
-
 const toText = (value: number | null | undefined) => (value === null || value === undefined ? '' : formatNumber(value))
 
 export function SetEntry({ title, kind, defaultUnit, suggestion, initial, onSubmit }: SetEntryProps) {
   const id = useId()
   const [weightText, setWeightText] = useState(toText(initial?.weight))
   const [repsText, setRepsText] = useState(toText(initial?.reps))
-  const [unit, setUnit] = useState<WeightUnit>(initial?.unit ?? suggestion?.weight?.unit ?? defaultUnit)
+  // The unit is the exercise's (changed only by editing the exercise); an edited set keeps the one
+  // it was logged in, never converted.
+  const unit: WeightUnit = initial?.unit ?? defaultUnit
   // RPE is hidden for now (user's call); editing a set keeps the one it already had.
   const rpe = initial?.rpe ?? null
   const [errors, setErrors] = useState<SetErrors>({})
@@ -84,12 +80,7 @@ export function SetEntry({ title, kind, defaultUnit, suggestion, initial, onSubm
 
   return (
     <div className={styles.entry}>
-      {/* The unit applies to the whole set, so it sits at the far right of the title row,
-          showing both options so it reads as a choice, not a label. */}
-      <div className={styles.head}>
-        <p className={styles.title}>{title}</p>
-        <SegmentedControl label="Unidad" hideLabel value={unit} options={UNIT_OPTIONS} onChange={setUnit} />
-      </div>
+      <p className={styles.title}>{title}</p>
 
       <div className={styles.fields}>
         <div className={styles.field}>
