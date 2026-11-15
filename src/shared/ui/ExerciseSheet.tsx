@@ -204,7 +204,6 @@ export function ExerciseSheet({ exercise, initialName = '', onClose, onCreated }
               inputMode="decimal"
               autoComplete="off"
               enterKeyHint="done"
-              placeholder="Ej.: 40"
               hint={
                 lastTime
                   ? undefined
@@ -238,7 +237,6 @@ export function ExerciseSheet({ exercise, initialName = '', onClose, onCreated }
                   inputMode="numeric"
                   autoComplete="off"
                   enterKeyHint="done"
-                  placeholder="10"
                   value={shown.reps}
                   onChange={(event) => setRepsText(event.target.value)}
                   aria-invalid={errors.targetReps ? true : undefined}
@@ -263,7 +261,7 @@ export function ExerciseSheet({ exercise, initialName = '', onClose, onCreated }
           onChange={(event) => setNotes(event.target.value)}
           error={errors.notes}
           maxLength={EXERCISE_NOTES_MAX_LENGTH}
-          placeholder="Ej.: asiento en 4, agarre cerrado"
+          placeholder="Ej.: agarre cerrado, codos pegados"
           hint={errors.notes ? undefined : 'Se mostrará cada vez que hagas este ejercicio.'}
         />
         {formError && (

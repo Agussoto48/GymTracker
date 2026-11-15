@@ -116,7 +116,7 @@ export function RoutineSheet({ routine, exercises, onClose }: RoutineSheetProps)
           autoComplete="off"
           autoCapitalize="sentences"
           enterKeyHint="done"
-          placeholder="Ej.: Push, Pierna, Torso"
+          placeholder="Ej.: Push"
         />
 
         <fieldset className={styles.exercises} aria-describedby={errors.exerciseIds ? `${formId}-ex-error` : undefined}>

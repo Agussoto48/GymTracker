@@ -13,7 +13,7 @@ export function validateRoutine(input: RoutineInput): RoutineValidation {
   const errors: RoutineErrors = {}
 
   const name = typeof input.name === 'string' ? normalizeName(input.name) : ''
-  if (name.length === 0) errors.name = 'Escribe un nombre, p. ej. «Push».'
+  if (name.length === 0) errors.name = 'Escribe un nombre, por ejemplo, «Push».'
   else if (name.length > ROUTINE_NAME_MAX_LENGTH) errors.name = `Máximo ${ROUTINE_NAME_MAX_LENGTH} caracteres.`
 
   const ids = input.exerciseIds

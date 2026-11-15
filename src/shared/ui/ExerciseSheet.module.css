@@ -56,10 +56,6 @@
   text-align: center;
 }
 
-.targetInput::placeholder {
-  color: var(--label-2);
-}
-
 .targetInput[aria-invalid='true'] {
   border-color: var(--danger);
 }
