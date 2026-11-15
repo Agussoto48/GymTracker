@@ -16,11 +16,14 @@ export function RoutineList({ routines, exercises, onSelect }: RoutineListProps)
         return (
           <li key={routine.id}>
             <button type="button" className={styles.row} onClick={() => onSelect(routine)}>
-              <span className={styles.name}>{routine.name}</span>
-              <span className={styles.meta}>
-                {count} {count === 1 ? 'ejercicio' : 'ejercicios'} ·{' '}
-                {routine.exerciseIds.map((id) => names.get(id) ?? '—').join(', ')}
+              <span className={styles.text}>
+                <span className={styles.name}>{routine.name}</span>
+                <span className={styles.meta}>
+                  {count} {count === 1 ? 'ejercicio' : 'ejercicios'} ·{' '}
+                  {routine.exerciseIds.map((id) => names.get(id) ?? '—').join(', ')}
+                </span>
               </span>
+              <span className={styles.edit}>Editar</span>
             </button>
           </li>
         )

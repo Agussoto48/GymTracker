@@ -12,7 +12,9 @@
 }
 
 .row {
-  display: grid;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
   width: 100%;
   min-height: 60px;
   padding: var(--space-3) var(--space-4);
@@ -26,6 +28,12 @@
   background: var(--surface-2);
 }
 
+.text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
 .name {
   font-weight: 600;
   overflow-wrap: anywhere;
@@ -37,4 +45,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.edit {
+  flex-shrink: 0;
+  color: var(--label-2);
+  font-size: var(--text-subhead);
 }

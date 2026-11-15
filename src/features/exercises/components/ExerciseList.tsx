@@ -21,9 +21,8 @@ export function ExerciseList({ exercises, onSelect }: ExerciseListProps) {
                 {exercise.notes && ` · ${exercise.notes}`}
               </span>
             </span>
-            <svg className={styles.chevron} width="8" height="14" viewBox="0 0 8 14" aria-hidden="true">
-              <path d="M1 1l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            {/* Words, not a chevron: the row opens the edit form (a chevron read as "expand"). */}
+            <span className={styles.edit}>Editar</span>
           </button>
         </li>
       ))}
