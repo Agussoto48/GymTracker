@@ -18,6 +18,7 @@ import { useLastPerformance } from '../../data/sessions.ts'
 import { formatNumber, formatShortDate } from '../lib/format.ts'
 import { SegmentedControl } from './SegmentedControl.tsx'
 import { useConfirm } from './useConfirm.tsx'
+import { useToast } from './useToast.ts'
 import { RowButton } from './RowButton.tsx'
 import { Sheet } from './Sheet.tsx'
 import { TextField } from './TextField.tsx'
@@ -57,6 +58,7 @@ export function ExerciseSheet({ exercise, initialName = '', onClose, onCreated }
   const inUse = useExerciseInUse(exercise?.id ?? null)
   const lastTime = useLastPerformance(exercise?.id ?? null)
   const [confirm, confirmSheet] = useConfirm()
+  const toast = useToast()
 
   // The latest values: targets, or what was done last time if that is newer (domain/workout.ts).
   const latest = exercise && lastTime !== undefined ? latestTargets(exercise, lastTime) : null
@@ -100,8 +102,24 @@ export function ExerciseSheet({ exercise, initialName = '', onClose, onCreated }
           ? { targetSets: parseDecimal(shown.sets) }
           : {}),
     }
-    if (exercise) void run(() => updateExercise(exercise.id, input))
-    else void run(() => createExercise(input), onCreated ?? onClose)
+    if (exercise) {
+      void run(
+        () => updateExercise(exercise.id, input),
+        (updated) => {
+          toast(`Ejercicio «${updated.name}» guardado`)
+          onClose()
+        },
+      )
+    } else {
+      void run(
+        () => createExercise(input),
+        (created) => {
+          toast(`Ejercicio «${created.name}» creado`)
+          if (onCreated) onCreated(created)
+          else onClose()
+        },
+      )
+    }
   }
 
   async function handleDelete() {
@@ -112,7 +130,15 @@ export function ExerciseSheet({ exercise, initialName = '', onClose, onCreated }
       confirmLabel: 'Eliminar ejercicio',
       destructive: true,
     })
-    if (confirmed) void run(() => deleteExercise(exercise.id))
+    if (confirmed) {
+      void run(
+        () => deleteExercise(exercise.id),
+        () => {
+          toast(`Ejercicio «${exercise.name}» eliminado`)
+          onClose()
+        },
+      )
+    }
   }
 
   async function handleArchive() {
@@ -131,7 +157,15 @@ export function ExerciseSheet({ exercise, initialName = '', onClose, onCreated }
             confirmLabel: 'Restaurar ejercicio',
           },
     )
-    if (confirmed) void run(() => setExerciseArchived(exercise.id, archiving))
+    if (confirmed) {
+      void run(
+        () => setExerciseArchived(exercise.id, archiving),
+        () => {
+          toast(`Ejercicio «${exercise.name}» ${archiving ? 'archivado' : 'restaurado'}`)
+          onClose()
+        },
+      )
+    }
   }
 
   const targetsError = errors.targetSets ?? errors.targetReps

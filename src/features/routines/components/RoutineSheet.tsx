@@ -14,6 +14,7 @@ import { useConfirm } from '../../../shared/ui/useConfirm.tsx'
 import { RowButton } from '../../../shared/ui/RowButton.tsx'
 import { Sheet } from '../../../shared/ui/Sheet.tsx'
 import { TextField } from '../../../shared/ui/TextField.tsx'
+import { useToast } from '../../../shared/ui/useToast.ts'
 import styles from './RoutineSheet.module.css'
 
 type RoutineSheetProps = {
@@ -33,13 +34,15 @@ export function RoutineSheet({ routine, exercises, onClose }: RoutineSheetProps)
   const [saving, setSaving] = useState(false)
   const used = useRoutineUsed(routine?.id ?? null)
   const [confirm, confirmSheet] = useConfirm()
+  const toast = useToast()
   const byId = new Map(exercises.map((e) => [e.id, e]))
 
-  async function run(action: () => Promise<unknown>) {
+  /** Runs the change; on success confirms it with a toast (its text from the result) and closes. */
+  async function run<T>(action: () => Promise<T>, done: (result: T) => string) {
     setSaving(true)
     setFormError(null)
     try {
-      await action()
+      toast(done(await action()))
       onClose()
     } catch (error) {
       if (error instanceof ValidationError) setErrors(error.errors)
@@ -52,7 +55,8 @@ export function RoutineSheet({ routine, exercises, onClose }: RoutineSheetProps)
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
     const input = { name, exerciseIds }
-    void run(() => (routine ? updateRoutine(routine.id, input) : createRoutine(input)))
+    if (routine) void run(() => updateRoutine(routine.id, input), (saved) => `Rutina «${saved.name}» guardada`)
+    else void run(() => createRoutine(input), (created) => `Rutina «${created.name}» creada`)
   }
 
   async function handleDelete() {
@@ -63,7 +67,7 @@ export function RoutineSheet({ routine, exercises, onClose }: RoutineSheetProps)
       confirmLabel: 'Eliminar rutina',
       destructive: true,
     })
-    if (confirmed) void run(() => deleteRoutine(routine.id))
+    if (confirmed) void run(() => deleteRoutine(routine.id), () => `Rutina «${routine.name}» eliminada`)
   }
 
   async function handleArchive() {
@@ -82,7 +86,12 @@ export function RoutineSheet({ routine, exercises, onClose }: RoutineSheetProps)
             confirmLabel: 'Restaurar rutina',
           },
     )
-    if (confirmed) void run(() => setRoutineArchived(routine.id, archiving))
+    if (confirmed) {
+      void run(
+        () => setRoutineArchived(routine.id, archiving),
+        () => `Rutina «${routine.name}» ${archiving ? 'archivada' : 'restaurada'}`,
+      )
+    }
   }
 
   const move = (from: number, to: number) => setExerciseIds((ids) => moveItem(ids, from, to))
