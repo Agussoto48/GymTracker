@@ -142,12 +142,12 @@ describe('suggestNextSet', () => {
     expect(suggestNextSet([], [], { weight: { value: 40, unit: 'kg' }, reps: null })).toMatchObject({ reps: null })
   })
 
-  test('uses the same set number from last time', () => {
+  test('the first set comes from last time', () => {
     expect(suggestNextSet(last, [])).toMatchObject({ weight: { value: 60 }, reps: 10, source: 'last-time' })
-    expect(suggestNextSet(last, [set(65, 8)])).toMatchObject({ reps: 9, source: 'last-time' })
   })
 
-  test('falls back to the previous set of this session', () => {
+  test('from the second set on, it repeats the previous set of this session (not last time)', () => {
+    expect(suggestNextSet(last, [set(40, 12)])).toMatchObject({ weight: { value: 40 }, reps: 12, source: 'previous-set' })
     expect(suggestNextSet(last, [set(60, 10), set(60, 9), set(62.5, 8)])).toMatchObject({
       weight: { value: 62.5 },
       reps: 8,

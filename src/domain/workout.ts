@@ -147,9 +147,9 @@ export function latestTargets(
 }
 
 /**
- * The "ghost" for the next set. With an active target, the first set proposes it (missing parts
- * come from last time) and later sets repeat the previous one. Otherwise: same set number from
- * last time, then the previous set of this session. null when there is nothing to suggest.
+ * The "ghost" for the next set. From the second set on, it repeats the previous set of this session
+ * (what was just done is the best guess). The first set proposes the active target (missing parts
+ * come from last time), else last time's first set. null when there is nothing to suggest.
  */
 export function suggestNextSet(
   lastTimeSets: readonly WorkoutSet[],
@@ -157,14 +157,12 @@ export function suggestNextSet(
   target: ActiveTarget | null = null,
 ): SetSuggestion | null {
   const previous = currentSets.at(-1)
+  if (previous) return { weight: previous.weight, reps: previous.reps, source: 'previous-set' }
+  const first = lastTimeSets[0]
   if (target) {
-    if (previous) return { weight: previous.weight, reps: previous.reps, source: 'previous-set' }
-    const first = lastTimeSets[0]
     return { weight: target.weight ?? first?.weight ?? null, reps: target.reps ?? first?.reps ?? null, source: 'target' }
   }
-  const fromLastTime = lastTimeSets[currentSets.length]
-  if (fromLastTime) return { weight: fromLastTime.weight, reps: fromLastTime.reps, source: 'last-time' }
-  if (previous) return { weight: previous.weight, reps: previous.reps, source: 'previous-set' }
+  if (first) return { weight: first.weight, reps: first.reps, source: 'last-time' }
   return null
 }
 
