@@ -119,9 +119,11 @@ export function ExerciseCard({
   }
 
   const canFinish = canFinishExercise(entry)
+  // With every target set logged, reopening would leave nothing to do (data/sessions.ts › reopenExercise).
+  const canReopen = !allSetsLogged
   const menuActions: SheetAction[] = [
     finished
-      ? { id: 'reopen', label: 'Reabrir ejercicio' }
+      ? { id: 'reopen', label: 'Reabrir ejercicio', disabled: !canReopen }
       : { id: 'finish', label: 'Finalizar ejercicio', disabled: !canFinish },
     { id: 'remove', label: 'Quitar del entrenamiento', destructive: true },
   ]
@@ -249,7 +251,15 @@ export function ExerciseCard({
         <ActionSheet
           variant="menu"
           title={exercise.name}
-          message={!finished && !canFinish ? 'Anota una serie para poder finalizarlo.' : undefined}
+          message={
+            finished
+              ? canReopen
+                ? undefined
+                : `Completaste ${count(entry.sets.length, 'serie', 'series')}. Para reabrirlo, borra una.`
+              : canFinish
+                ? undefined
+                : 'Anota una serie para poder finalizarlo.'
+          }
           actions={menuActions}
           onSelect={(actionId) => void onMenu(actionId)}
         />

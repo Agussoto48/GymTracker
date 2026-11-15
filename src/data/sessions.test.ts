@@ -180,6 +180,19 @@ describe('target sets', () => {
     expect((await db.sessions.get(session.id))?.exercises[0].sets).toHaveLength(3)
   })
 
+  test('one with all its target sets cannot be reopened until a set is deleted', async () => {
+    const session = await startSession()
+    await addExerciseToSession(session.id, pec.id)
+    await addSet(session.id, pec.id, kg(60, 10))
+    await addSet(session.id, pec.id, kg(60, 10))
+    const { set: last } = await addSet(session.id, pec.id, kg(60, 10))
+    await expect(reopenExercise(session.id, pec.id)).rejects.toThrow()
+    expect((await db.sessions.get(session.id))?.exercises[0].finishedAt).not.toBeNull()
+    await deleteSet(session.id, pec.id, last.id)
+    const reopened = await reopenExercise(session.id, pec.id)
+    expect(reopened.exercises[0].finishedAt).toBeNull()
+  })
+
   test('an exercise without target sets (saved before they were required) has no limit', async () => {
     await db.exercises.update(pec.id, { targetSets: null })
     const session = await startSession()

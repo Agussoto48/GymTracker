@@ -161,10 +161,18 @@ export async function finishExercise(sessionId: Id, exerciseId: Id): Promise<Wor
   )
 }
 
-/** Back to pending, in its original place in the workout. */
+/**
+ * Back to pending, in its original place in the workout. Refuses one with all its target sets
+ * logged: there would be nothing left to do (delete a set first).
+ */
 export async function reopenExercise(sessionId: Id, exerciseId: Id): Promise<WorkoutSession> {
+  const exercise = await db.exercises.get(exerciseId)
+  if (!exercise) throw new NotFoundError('Exercise', exerciseId)
   return changeActiveSession(sessionId, (session) =>
-    updateEntry(session, exerciseId, (entry) => ({ ...entry, finishedAt: null })),
+    updateEntry(session, exerciseId, (entry) => {
+      if (isSetLimitReached(entry.sets.length, exercise.targetSets)) throw new Error('All target sets are logged.')
+      return { ...entry, finishedAt: null }
+    }),
   )
 }
 
