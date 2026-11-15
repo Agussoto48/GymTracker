@@ -12,6 +12,7 @@ import { Button } from '../../shared/ui/Button.tsx'
 import { EmptyState } from '../../shared/ui/EmptyState.tsx'
 import { ScreenHeader } from '../../shared/ui/ScreenHeader.tsx'
 import { Section } from '../../shared/ui/Section.tsx'
+import { useConfirm } from '../../shared/ui/useConfirm.tsx'
 import { WorkoutSheet } from './components/WorkoutSheet.tsx'
 import styles from './WorkoutScreen.module.css'
 
@@ -23,8 +24,7 @@ export function WorkoutScreen() {
   const [open, setOpen] = useState(false)
   // The workout just finished: shown once as a congratulation with its summary.
   const [finished, setFinished] = useState<WorkoutSession | null>(null)
-  // Asked before starting, so a stray tap doesn't start the clock (routine null = free workout).
-  const [toStart, setToStart] = useState<{ routine: Routine | null } | null>(null)
+  const [confirm, confirmSheet] = useConfirm()
   const activeRoutines = routines?.filter((r) => r.archivedAt === null) ?? []
   const sessionRoutine = session?.routineId ? routines?.find((r) => r.id === session.routineId) : undefined
   // A routine deleted mid-workout leaves its name on the session (data/routines.ts › deleteRoutine).
@@ -43,8 +43,18 @@ export function WorkoutScreen() {
     ? [...activeRoutines.filter((r) => r.id === inProgressId), ...activeRoutines.filter((r) => r.id !== inProgressId)]
     : activeRoutines
 
+  // Asked first, so a stray tap doesn't start the clock (routine null = free workout).
   async function start(routine: Routine | null) {
-    setToStart(null)
+    const confirmed = await confirm(
+      routine
+        ? {
+            title: `¿Empezar la rutina «${routine.name}»?`,
+            message: startMessage(routine.exerciseIds.length, startableCount(routine.exerciseIds)),
+            confirmLabel: 'Empezar rutina',
+          }
+        : { title: '¿Empezar un entrenamiento libre?', confirmLabel: 'Empezar entrenamiento' },
+    )
+    if (!confirmed) return
     await startSession(routine?.id ?? null)
     setOpen(true)
   }
@@ -71,7 +81,7 @@ export function WorkoutScreen() {
 
       {session === null && (
         <div className={styles.start}>
-          <Button variant="primary" onClick={() => setToStart({ routine: null })}>
+          <Button variant="primary" onClick={() => void start(null)}>
             Empezar entrenamiento libre
           </Button>
           <p className={styles.note}>Eliges los ejercicios de tu catálogo sobre la marcha.</p>
@@ -113,7 +123,7 @@ export function WorkoutScreen() {
                   <Button
                     className={styles.startRoutine}
                     disabled={Boolean(session) || startable === 0}
-                    onClick={() => setToStart({ routine })}
+                    onClick={() => void start(routine)}
                     aria-label={`Empezar ${routine.name}`}
                   >
                     Empezar
@@ -146,23 +156,11 @@ export function WorkoutScreen() {
           title="¡Entrenamiento terminado!"
           message={finishedMessage(finished)}
           actionLabel="Listo"
-          onAction={() => setFinished(null)}
+          onClose={() => setFinished(null)}
         />
       )}
 
-      {toStart && (
-        <AlertDialog
-          title={toStart.routine ? `¿Empezar la rutina «${toStart.routine.name}»?` : '¿Empezar un entrenamiento libre?'}
-          message={
-            toStart.routine
-              ? startMessage(toStart.routine.exerciseIds.length, startableCount(toStart.routine.exerciseIds))
-              : undefined
-          }
-          actionLabel="Empezar"
-          onAction={() => void start(toStart.routine)}
-          onCancel={() => setToStart(null)}
-        />
-      )}
+      {confirmSheet}
     </>
   )
 }

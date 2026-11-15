@@ -2,26 +2,21 @@ import { useEffect, useId, useRef } from 'react'
 import styles from './AlertDialog.module.css'
 
 type AlertDialogProps = {
-  /** What happened, or the question being asked, short (HIG alerts › Content). */
+  /** What happened, short (HIG alerts › Content). */
   title: string
   /** Only when it adds value. */
   message?: string
-  /**
-   * The default button, a verb naming the result ("Empezar"). When the alert only informs, Apple's
-   * choice is "Done" («Listo»), never "OK".
-   */
+  /** Single button. When the alert only informs, Apple's choice is "Done" («Listo»), never "OK". */
   actionLabel: string
-  onAction: () => void
-  /** Adds «Cancelar» on the leading side (HIG alerts › Buttons); Escape then cancels instead of acting. */
-  onCancel?: () => void
+  onClose: () => void
 }
 
 /**
- * iOS-style alert: a centered card over a dimmed screen, title and message, one or two capsule buttons.
- * For rare, important moments only (HIG alerts, feedback); everyday confirmations use ActionSheet.
+ * iOS-style alert: a centered card over a dimmed screen, title and message, one capsule button.
+ * For rare, important moments only (HIG alerts, feedback): confirmations and choices use ActionSheet.
  * Escape closes it; a tap outside does not (as on iOS).
  */
-export function AlertDialog({ title, message, actionLabel, onAction, onCancel }: AlertDialogProps) {
+export function AlertDialog({ title, message, actionLabel, onClose }: AlertDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const titleId = useId()
   const messageId = useId()
@@ -46,8 +41,7 @@ export function AlertDialog({ title, message, actionLabel, onAction, onCancel }:
       data-alert=""
       onCancel={(event) => {
         event.preventDefault()
-        if (onCancel) onCancel()
-        else onAction()
+        onClose()
       }}
     >
       <div className={styles.card}>
@@ -59,21 +53,9 @@ export function AlertDialog({ title, message, actionLabel, onAction, onCancel }:
             {message}
           </p>
         )}
-        <div className={styles.buttons}>
-          {onCancel && (
-            <button
-              type="button"
-              className={`${styles.button} ${styles.cancel}`}
-              onClick={onCancel}
-              data-action="cancel"
-            >
-              Cancelar
-            </button>
-          )}
-          <button type="button" className={styles.button} onClick={onAction} data-action="confirm">
-            {actionLabel}
-          </button>
-        </div>
+        <button type="button" className={styles.button} onClick={onClose}>
+          {actionLabel}
+        </button>
       </div>
     </dialog>
   )
