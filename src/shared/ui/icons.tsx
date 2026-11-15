@@ -92,3 +92,12 @@ export function ChevronIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+/** Check mark for confirmations, stroked like ChevronIcon to match semibold text next to it. */
+export function CheckIcon({ className }: IconProps) {
+  return (
+    <svg {...base} fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M5 12.5l4.5 4.5L19 7.5" />
+    </svg>
+  )
+}
