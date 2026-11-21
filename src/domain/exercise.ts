@@ -2,7 +2,7 @@ import { normalizeName } from './names.ts'
 import type { DeletedExercise, Exercise, ExerciseKind, Id, Routine, WeightUnit, WorkoutSession } from './types.ts'
 import { REPS_MAX, WEIGHT_MAX, isValidWeightValue } from './workout.ts'
 
-export { compareByName, isDuplicateName, nameKey, normalizeName } from './names.ts'
+export { compareByName, isDuplicateName, matchesQuery, nameKey, normalizeName } from './names.ts'
 
 export const EXERCISE_NAME_MAX_LENGTH = 80
 export const EXERCISE_NOTES_MAX_LENGTH = 500

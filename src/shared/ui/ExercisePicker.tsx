@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { nameKey } from '../../domain/names.ts'
+import { matchesQuery } from '../../domain/names.ts'
 import type { Exercise, Id } from '../../domain/types.ts'
 import { AddButton } from './AddButton.tsx'
 import { ExerciseSheet } from './ExerciseSheet.tsx'
@@ -22,8 +22,7 @@ export function ExercisePicker({ exercises, excludeIds, closeLabel, onPick, onCl
   const [query, setQuery] = useState('')
   const [creating, setCreating] = useState(false)
   const available = exercises.filter((e) => e.archivedAt === null && !excludeIds.includes(e.id))
-  const key = nameKey(query)
-  const matches = key ? available.filter((e) => nameKey(e.name).includes(key)) : available
+  const matches = available.filter((e) => matchesQuery(e.name, query))
 
   return (
     <Sheet

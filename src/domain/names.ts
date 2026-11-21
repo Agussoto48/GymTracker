@@ -13,6 +13,14 @@ export function nameKey(name: string): string {
     .toLocaleLowerCase('es')
 }
 
+/**
+ * True if the name contains the search text, ignoring case, accents and extra spaces
+ * ("cuadri" finds "Extensión de cuádriceps"). An empty search matches everything.
+ */
+export function matchesQuery(name: string, query: string): boolean {
+  return nameKey(name).includes(nameKey(query))
+}
+
 /** True if another item (archived or not) already uses this name. */
 export function isDuplicateName(
   name: string,

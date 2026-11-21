@@ -98,3 +98,25 @@ export function CheckIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+/** Magnifying glass for search fields, stroked like SF Symbols' magnifyingglass. */
+export function SearchIcon({ className }: IconProps) {
+  return (
+    <svg {...base} fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" className={className}>
+      <circle cx="10.5" cy="10.5" r="6.5" />
+      <path d="M15.5 15.5l5 5" />
+    </svg>
+  )
+}
+
+/** Filled circle with a cut-out ×, like SF Symbols' xmark.circle.fill (clear a field). */
+export function ClearIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path
+        fillRule="evenodd"
+        d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zM8.46 8.46a1 1 0 0 1 1.41 0L12 10.59l2.12-2.13a1 1 0 1 1 1.42 1.42L13.41 12l2.13 2.12a1 1 0 0 1-1.42 1.42L12 13.41l-2.12 2.13a1 1 0 0 1-1.42-1.42L10.59 12 8.46 9.88a1 1 0 0 1 0-1.42z"
+      />
+    </svg>
+  )
+}

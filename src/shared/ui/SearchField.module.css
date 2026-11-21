@@ -1,0 +1,77 @@
+/* A capsule with the same fill as the toolbar's round buttons, like WhatsApp's chat search. */
+.field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: var(--tap);
+  border-radius: calc(var(--tap) / 2);
+  background: var(--surface);
+  color: var(--label-2); /* icon: 6.4:1 light, 6.7:1 dark on the fill */
+}
+
+.field:has(.input:focus-visible) {
+  outline: 3px solid var(--accent-text);
+  outline-offset: 2px;
+}
+
+.icon {
+  position: absolute;
+  left: var(--space-3);
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+}
+
+/* At least 16 px so Safari iOS does not zoom in on focus. */
+.input {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--tap);
+  padding: 0 var(--space-3) 0 calc(var(--space-3) + 20px + var(--space-2));
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: var(--label);
+  font: inherit;
+  font-size: max(16px, var(--text-body));
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* The ring is on the capsule (:focus-within), not on the bare input. */
+.input:focus-visible {
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--label-2); /* 6.4:1 light, 6.7:1 dark */
+}
+
+/* Own Clear button instead of the browser's (Safari iOS does not show one). */
+.input::-webkit-search-cancel-button,
+.input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* 44 px target, 18 px glyph at the trailing edge. */
+.clear {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: var(--tap);
+  height: var(--tap);
+  margin-left: calc(var(--space-3) * -1);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--label-2);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.clearIcon {
+  width: 18px;
+  height: 18px;
+}

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { routineMatchesQuery } from '../../domain/routine.ts'
 import type { Routine } from '../../domain/types.ts'
 import { useExercises } from '../../data/exercises.ts'
 import { useRoutines } from '../../data/routines.ts'
@@ -6,6 +7,7 @@ import { AddButton } from '../../shared/ui/AddButton.tsx'
 import { EmptyState } from '../../shared/ui/EmptyState.tsx'
 import { MoreButton } from '../../shared/ui/MoreButton.tsx'
 import { ScreenHeader } from '../../shared/ui/ScreenHeader.tsx'
+import { SearchField } from '../../shared/ui/SearchField.tsx'
 import { Section } from '../../shared/ui/Section.tsx'
 import { RoutineList } from './components/RoutineList.tsx'
 import { RoutineSheet } from './components/RoutineSheet.tsx'
@@ -17,9 +19,14 @@ export function RoutinesScreen() {
   const routines = useRoutines()
   const exercises = useExercises()
   const [editing, setEditing] = useState<Editing>(null)
+  const [query, setQuery] = useState('')
 
-  const active = routines?.filter((r) => r.archivedAt === null) ?? []
-  const archived = routines?.filter((r) => r.archivedAt !== null) ?? []
+  // A routine matches by its name or its exercises; archived ones stay in their section.
+  const searching = query.trim() !== ''
+  const exerciseById = new Map(exercises?.map((e) => [e.id, e]))
+  const found = routines?.filter((r) => routineMatchesQuery(r, query, exerciseById)) ?? []
+  const active = found.filter((r) => r.archivedAt === null)
+  const archived = found.filter((r) => r.archivedAt !== null)
   const noExercises = exercises !== undefined && !exercises.some((e) => e.archivedAt === null)
   const openNew = () => setEditing({ routine: null })
 
@@ -30,9 +37,18 @@ export function RoutinesScreen() {
         leading={<MoreButton />}
         // Without exercises a routine cannot be saved, so the + only shows once there is something to pick.
         action={!noExercises && <AddButton label="Nueva rutina" onClick={openNew} />}
+        search={
+          routines && routines.length > 0 ? (
+            <SearchField label="Buscar rutinas" value={query} onChange={setQuery} resultCount={found.length} />
+          ) : undefined
+        }
       />
 
-      {routines && active.length === 0 && (
+      {searching && found.length === 0 && (
+        <EmptyState variant="plain" message={`Ninguna rutina coincide con «${query.trim()}».`} />
+      )}
+
+      {routines && !searching && active.length === 0 && (
         <EmptyState
           variant="plain"
           message={

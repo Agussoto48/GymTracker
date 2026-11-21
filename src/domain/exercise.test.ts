@@ -5,6 +5,7 @@ import {
   compareByName,
   exerciseDeleteBlocker,
   isDuplicateName,
+  matchesQuery,
   nameKey,
   normalizeName,
   parseDeletedExercise,
@@ -28,6 +29,19 @@ describe('normalizeName', () => {
 describe('nameKey', () => {
   test('ignores case and accents', () => {
     expect(nameKey('Extensión de Cuádriceps')).toBe(nameKey('extension de cuadriceps'))
+  })
+})
+
+describe('matchesQuery', () => {
+  test('finds the text anywhere in the name, ignoring case, accents and extra spaces', () => {
+    expect(matchesQuery('Extensión de cuádriceps', 'CUADRI')).toBe(true)
+    expect(matchesQuery('Press banca inclinado', '  banca   incl ')).toBe(true)
+    expect(matchesQuery('Press banca', 'sentadilla')).toBe(false)
+  })
+
+  test('an empty or blank search matches everything', () => {
+    expect(matchesQuery('Press banca', '')).toBe(true)
+    expect(matchesQuery('Press banca', '   ')).toBe(true)
   })
 })
 

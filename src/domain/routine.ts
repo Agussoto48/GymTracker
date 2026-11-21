@@ -1,4 +1,4 @@
-import { normalizeName } from './names.ts'
+import { matchesQuery, normalizeName } from './names.ts'
 import type { Exercise, Id, Routine } from './types.ts'
 
 export const ROUTINE_NAME_MAX_LENGTH = 60
@@ -49,5 +49,21 @@ export function startableExerciseIds(exerciseIds: readonly Id[], exerciseById: R
   return exerciseIds.filter((id) => {
     const exercise = exerciseById.get(id)
     return exercise !== undefined && exercise.archivedAt === null
+  })
+}
+
+/**
+ * A routine matches a search by its own name or by the name of any of its exercises, so searching
+ * "sentadilla" also finds "Pierna".
+ */
+export function routineMatchesQuery(
+  routine: Pick<Routine, 'name' | 'exerciseIds'>,
+  query: string,
+  exerciseById: ReadonlyMap<Id, Pick<Exercise, 'name'>>,
+): boolean {
+  if (matchesQuery(routine.name, query)) return true
+  return routine.exerciseIds.some((id) => {
+    const exercise = exerciseById.get(id)
+    return exercise !== undefined && matchesQuery(exercise.name, query)
   })
 }

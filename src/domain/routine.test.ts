@@ -1,5 +1,12 @@
 import { describe, expect, test } from 'vitest'
-import { ROUTINE_MAX_EXERCISES, ROUTINE_NAME_MAX_LENGTH, moveItem, startableExerciseIds, validateRoutine } from './routine.ts'
+import {
+  ROUTINE_MAX_EXERCISES,
+  ROUTINE_NAME_MAX_LENGTH,
+  moveItem,
+  routineMatchesQuery,
+  startableExerciseIds,
+  validateRoutine,
+} from './routine.ts'
 import type { Exercise } from './types.ts'
 
 describe('validateRoutine', () => {
@@ -52,5 +59,34 @@ describe('startableExerciseIds', () => {
 
   test('is empty when every exercise is archived', () => {
     expect(startableExerciseIds(['b'], new Map([exercise('b', true)]))).toEqual([])
+  })
+})
+
+describe('routineMatchesQuery', () => {
+  const exerciseById = new Map([
+    ['squat', { name: 'Sentadilla' }],
+    ['curl', { name: 'Curl femoral' }],
+  ])
+  const legs = { name: 'Pierna', exerciseIds: ['squat', 'curl'] }
+
+  test('matches by the routine name, ignoring case and accents', () => {
+    expect(routineMatchesQuery(legs, 'PIER', exerciseById)).toBe(true)
+  })
+
+  test('matches by the name of any of its exercises', () => {
+    expect(routineMatchesQuery(legs, 'sentadi', exerciseById)).toBe(true)
+    expect(routineMatchesQuery(legs, 'femoral', exerciseById)).toBe(true)
+  })
+
+  test('does not match when neither the name nor its exercises contain the text', () => {
+    expect(routineMatchesQuery(legs, 'press', exerciseById)).toBe(false)
+  })
+
+  test('ignores exercise ids that no longer exist', () => {
+    expect(routineMatchesQuery({ name: 'Push', exerciseIds: ['gone'] }, 'gone', exerciseById)).toBe(false)
+  })
+
+  test('an empty search matches every routine', () => {
+    expect(routineMatchesQuery(legs, ' ', exerciseById)).toBe(true)
   })
 })
