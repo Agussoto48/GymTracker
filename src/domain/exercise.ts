@@ -1,5 +1,5 @@
 import { normalizeName } from './names.ts'
-import type { Exercise, ExerciseKind, WeightUnit } from './types.ts'
+import type { DeletedExercise, Exercise, ExerciseKind, Id, Routine, WeightUnit, WorkoutSession } from './types.ts'
 import { REPS_MAX, WEIGHT_MAX, isValidWeightValue } from './workout.ts'
 
 export { compareByName, isDuplicateName, nameKey, normalizeName } from './names.ts'
@@ -104,4 +104,35 @@ export function validateExercise(input: ExerciseInput, options: ExerciseValidati
       targetReps: targetReps as number | null,
     },
   }
+}
+
+/**
+ * The copy a workout keeps of a deleted exercise (e.g. from a backup), or null when it is not valid.
+ * Only the name and the kind: the sets carry their own weight and unit.
+ */
+export function parseDeletedExercise(raw: unknown): DeletedExercise | null {
+  if (typeof raw !== 'object' || raw === null) return null
+  const { name, kind } = raw as Record<string, unknown>
+  const normalized = typeof name === 'string' ? normalizeName(name) : ''
+  if (normalized.length === 0 || normalized.length > EXERCISE_NAME_MAX_LENGTH) return null
+  if (!KINDS.includes(kind as ExerciseKind)) return null
+  return { name: normalized, kind: kind as ExerciseKind }
+}
+
+/** Why an exercise can't be deleted right now. */
+export type DeleteBlocker = { reason: 'active-workout' } | { reason: 'only-exercise'; routineName: string }
+
+/**
+ * A used exercise can be deleted: past workouts keep its name and kind, and routines drop it. Except
+ * while it is in the workout in progress, or when it is a routine's only exercise (a routine needs one).
+ * Returns null when it can be deleted.
+ */
+export function exerciseDeleteBlocker(
+  exerciseId: Id,
+  routines: readonly Pick<Routine, 'name' | 'exerciseIds'>[],
+  activeSession: Pick<WorkoutSession, 'exercises'> | null,
+): DeleteBlocker | null {
+  if (activeSession?.exercises.some((e) => e.exerciseId === exerciseId)) return { reason: 'active-workout' }
+  const only = routines.find((r) => r.exerciseIds.length === 1 && r.exerciseIds[0] === exerciseId)
+  return only ? { reason: 'only-exercise', routineName: only.name } : null
 }

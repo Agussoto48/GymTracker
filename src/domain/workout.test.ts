@@ -31,7 +31,7 @@ function session(id: string, startedAt: string, finished: boolean, sets: Workout
     routineName: null,
     startedAt,
     finishedAt: finished ? startedAt : null,
-    exercises: [{ exerciseId, notes: '', sets, finishedAt: null }],
+    exercises: [{ exerciseId, notes: '', sets, finishedAt: null, deletedExercise: null }],
     exerciseIds: [],
   })
 }
@@ -224,6 +224,7 @@ const entry = (exerciseId: string, sets: number, finishedAt: string | null = nul
   notes: '',
   sets: Array.from({ length: sets }, (_, i) => set(60, 10 + i)),
   finishedAt,
+  deletedExercise: null,
 })
 
 describe('finishing exercises', () => {

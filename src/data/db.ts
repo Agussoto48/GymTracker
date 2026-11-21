@@ -12,10 +12,14 @@ function withTargets(exercise: Partial<Exercise>) {
 
 /**
  * Fields added to sessions after v1, so absent never reaches the app as undefined: session exercises
- * written before v3 are pending, and sessions written before v4 have no deleted routine's name.
+ * written before v3 are pending, sessions written before v4 have no deleted routine's name, and
+ * session exercises written before v5 have no deleted exercise's copy.
  */
 function withSessionDefaults(session: WorkoutSession) {
-  for (const entry of session.exercises as Partial<SessionExercise>[]) entry.finishedAt ??= null
+  for (const entry of session.exercises as Partial<SessionExercise>[]) {
+    entry.finishedAt ??= null
+    entry.deletedExercise ??= null
+  }
   ;(session as Partial<WorkoutSession>).routineName ??= null
   return session
 }
@@ -57,6 +61,17 @@ export class GymTrackerDb extends Dexie {
       )
     // v4: a session keeps the name of its routine when the routine is deleted (not indexed). None yet.
     this.version(4)
+      .stores({})
+      .upgrade((tx) =>
+        tx
+          .table('sessions')
+          .toCollection()
+          .modify((session: WorkoutSession) => {
+            withSessionDefaults(session)
+          }),
+      )
+    // v5: a session exercise keeps the name and kind of its exercise when it is deleted (not indexed). None yet.
+    this.version(5)
       .stores({})
       .upgrade((tx) =>
         tx

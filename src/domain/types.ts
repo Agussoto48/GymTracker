@@ -60,7 +60,15 @@ export type SessionExercise = {
    * Only with at least one set; it moves to the end of the workout and can be reopened.
    */
   finishedAt: IsoDateTime | null
+  /**
+   * Schema v5. Name and kind of the exercise once it is deleted from the catalog (`exerciseId` then
+   * points to nothing), so history keeps showing it like a receipt. Null while the exercise exists.
+   */
+  deletedExercise: DeletedExercise | null
 }
+
+/** What history needs from an exercise that no longer exists. */
+export type DeletedExercise = { name: string; kind: ExerciseKind }
 
 export type WorkoutSession = {
   id: Id

@@ -1,12 +1,13 @@
-import { validateExercise } from './exercise.ts'
+import { parseDeletedExercise, validateExercise } from './exercise.ts'
 import { nameKey } from './names.ts'
 import { ROUTINE_NAME_MAX_LENGTH, validateRoutine } from './routine.ts'
 import type { Exercise, Routine, SessionExercise, WorkoutSession, WorkoutSet } from './types.ts'
 import { SESSION_NOTES_MAX_LENGTH, validateSet, withDerivedExerciseIds } from './workout.ts'
 
 // Backup file format (ADR-0003). Bump FORMAT_VERSION when the shape changes and keep reading old ones.
-// Optional additions that older builds can ignore (an exercise's `finishedAt`, a session's `routineName`)
-// keep the version.
+// Optional additions that older builds can ignore (an exercise's `finishedAt`, a session's `routineName`,
+// a session exercise's `deletedExercise`) keep the version. A backup with a deleted exercise is refused by
+// builds before schema v5 ("usa un ejercicio que no existe"), never misread.
 export const BACKUP_APP = 'gymtracker'
 export const BACKUP_FORMAT_VERSION = 1
 const MAX_ERRORS = 10
@@ -199,9 +200,18 @@ function parseSessions(
     for (const [position, rawEntry] of item.exercises.entries()) {
       const at = `${where}, ejercicio ${position + 1}`
       if (!isObject(rawEntry) || !isId(rawEntry.exerciseId)) return fail(`${at}: falta el ejercicio.`)
-      const exercise = exercises.get(rawEntry.exerciseId)
-      if (!exercise) return fail(`${at}: usa un ejercicio que no existe.`)
-      if (entries.some((e) => e.exerciseId === exercise.id)) return fail(`${at}: ejercicio repetido.`)
+      const exerciseId = rawEntry.exerciseId
+      const exercise = exercises.get(exerciseId)
+      // Absent in backups made before schema v5. Only an exercise deleted from the catalog has a copy,
+      // and only in a finished workout (one in progress blocks the delete).
+      const rawDeleted = rawEntry.deletedExercise ?? null
+      const deletedExercise = parseDeletedExercise(rawDeleted)
+      if (exercise && rawDeleted !== null) return fail(`${at}: copia de ejercicio inválida.`)
+      const known =
+        exercise ?? (deletedExercise && item.finishedAt !== null ? { kind: deletedExercise.kind, defaultUnit: 'kg' as const } : null)
+      if (!known) return fail(`${at}: usa un ejercicio que no existe.`)
+      const { kind, defaultUnit } = known
+      if (entries.some((e) => e.exerciseId === exerciseId)) return fail(`${at}: ejercicio repetido.`)
       if (typeof rawEntry.notes !== 'string' || rawEntry.notes.length > SESSION_NOTES_MAX_LENGTH) {
         return fail(`${at}: nota inválida.`)
       }
@@ -222,18 +232,24 @@ function parseSessions(
         const checked = validateSet(
           {
             weight: weight === null ? null : (weight.value as number),
-            unit: weight === null ? exercise.defaultUnit : (weight.unit as 'kg' | 'lb'),
+            unit: weight === null ? defaultUnit : (weight.unit as 'kg' | 'lb'),
             reps: rawSet.reps as number | null,
             rpe: (rawSet.rpe ?? null) as number | null,
           },
-          exercise.kind,
+          kind,
         )
         if (!checked.ok) return fail(`${setAt}: ${Object.values(checked.errors)[0]}`)
         setIds.add(rawSet.id)
         sets.push({ id: rawSet.id, ...checked.value, completedAt: rawSet.completedAt })
       }
       // Finished needs a set (domain/workout.ts › canFinishExercise); without one it is just pending.
-      entries.push({ exerciseId: exercise.id, notes: rawEntry.notes, sets, finishedAt: sets.length > 0 ? finishedAt : null })
+      entries.push({
+        exerciseId,
+        notes: rawEntry.notes,
+        sets,
+        finishedAt: sets.length > 0 ? finishedAt : null,
+        deletedExercise: exercise ? null : deletedExercise,
+      })
     }
 
     result.push(

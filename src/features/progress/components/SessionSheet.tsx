@@ -72,8 +72,11 @@ export function SessionSheet({ session, exerciseById, routineNames, onClose }: S
           <div className={styles.exercises}>
             {session.exercises.map((entry) => {
               const exercise = exerciseById.get(entry.exerciseId)
+              // A deleted exercise is shown from the workout's copy, without its history (it has none left).
+              const name = exercise?.name ?? entry.deletedExercise?.name ?? 'Ejercicio desconocido'
+              const kind = exercise?.kind ?? entry.deletedExercise?.kind ?? 'weighted'
               return (
-                <section key={entry.exerciseId} className={styles.card} aria-label={exercise?.name ?? 'Ejercicio'}>
+                <section key={entry.exerciseId} className={styles.card} aria-label={name}>
                   <h3 className={styles.title}>
                     {exercise ? (
                       <button
@@ -88,12 +91,12 @@ export function SessionSheet({ session, exerciseById, routineNames, onClose }: S
                         </span>
                       </button>
                     ) : (
-                      <span className={styles.name}>Ejercicio desconocido</span>
+                      <span className={styles.name}>{name}</span>
                     )}
                   </h3>
                   {entry.notes && <p className={styles.note}>{entry.notes}</p>}
                   {entry.sets.length > 0 ? (
-                    <SetList sets={entry.sets} kind={exercise?.kind ?? 'weighted'} />
+                    <SetList sets={entry.sets} kind={kind} />
                   ) : (
                     <p className={styles.note}>Sin series.</p>
                   )}

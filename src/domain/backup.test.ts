@@ -72,6 +72,42 @@ describe('parseBackup', () => {
     }
   })
 
+  test("a finished workout keeps a deleted exercise's copy; older backups have none", () => {
+    const old = parse(file())
+    expect(old.ok && old.data.sessions[0].exercises.map((e) => e.deletedExercise)).toEqual([null, null])
+
+    // Fondos (bodyweight, set without load) was deleted: only the workout remembers it.
+    const value = file({ exercises: [exercise('e1', 'Press banca')], routines: [] })
+    Object.assign(value.data.sessions[0], { routineId: null })
+    Object.assign(value.data.sessions[0].exercises[1], { deletedExercise: { name: ' Fondos ', kind: 'bodyweight' } })
+    const result = parse(value)
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.data.sessions[0].exercises[1]).toMatchObject({ exerciseId: 'e2', deletedExercise: { name: 'Fondos', kind: 'bodyweight' } })
+    expect(result.data.sessions[0].exerciseIds).toEqual(['e1', 'e2'])
+  })
+
+  test('rejects a deleted exercise without a valid copy, in a workout in progress, or next to an existing one', () => {
+    const withoutE2 = () => {
+      const value = file({ exercises: [exercise('e1', 'Press banca')], routines: [] })
+      Object.assign(value.data.sessions[0], { routineId: null })
+      return value
+    }
+    for (const copy of [undefined, null, { name: '', kind: 'bodyweight' }, { name: 'Fondos', kind: 'cardio' }]) {
+      const value = withoutE2()
+      Object.assign(value.data.sessions[0].exercises[1], { deletedExercise: copy })
+      expect(firstError(value)).toBe('Entrenamiento 1, ejercicio 2: usa un ejercicio que no existe.')
+    }
+    const inProgress = withoutE2()
+    Object.assign(inProgress.data.sessions[0], { finishedAt: null })
+    Object.assign(inProgress.data.sessions[0].exercises[1], { deletedExercise: { name: 'Fondos', kind: 'bodyweight' } })
+    expect(firstError(inProgress)).toMatch(/usa un ejercicio que no existe/)
+
+    const existing = file()
+    Object.assign(existing.data.sessions[0].exercises[0], { deletedExercise: { name: 'Press banca', kind: 'weighted' } })
+    expect(firstError(existing)).toBe('Entrenamiento 1, ejercicio 1: copia de ejercicio inválida.')
+  })
+
   test('backups without targets (older format) import as none; present ones are kept', () => {
     const value = file()
     Object.assign(value.data.exercises[1], { targetWeight: 10, targetSets: 3, targetReps: 8, targetUpdatedAt: t })

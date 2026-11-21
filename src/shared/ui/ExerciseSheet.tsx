@@ -12,7 +12,8 @@ import {
   deleteExercise,
   setExerciseArchived,
   updateExercise,
-  useExerciseInUse,
+  useExerciseUsage,
+  type ExerciseUsage,
 } from '../../data/exercises.ts'
 import { useLastPerformance } from '../../data/sessions.ts'
 import { formatNumber, formatShortDate } from '../lib/format.ts'
@@ -55,7 +56,7 @@ export function ExerciseSheet({ exercise, initialName = '', onClose, onCreated }
   const [errors, setErrors] = useState<ExerciseErrors>({})
   const [formError, setFormError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
-  const inUse = useExerciseInUse(exercise?.id ?? null)
+  const usage = useExerciseUsage(exercise?.id ?? null)
   const lastTime = useLastPerformance(exercise?.id ?? null)
   const [confirm, confirmSheet] = useConfirm()
   const toast = useToast()
@@ -123,10 +124,10 @@ export function ExerciseSheet({ exercise, initialName = '', onClose, onCreated }
   }
 
   async function handleDelete() {
-    if (!exercise) return
+    if (!exercise || !usage) return
     const confirmed = await confirm({
       title: `¿Eliminar «${exercise.name}»?`,
-      message: 'No se puede deshacer.',
+      message: deleteMessage(usage),
       confirmLabel: 'Eliminar ejercicio',
       destructive: true,
     })
@@ -279,19 +280,41 @@ export function ExerciseSheet({ exercise, initialName = '', onClose, onCreated }
           >
             {exercise.archivedAt === null ? 'Archivar ejercicio' : 'Restaurar ejercicio'}
           </RowButton>
-          {inUse === false && (
+          {usage && !usage.blocker && (
             <RowButton tone="destructive" disabled={saving} onClick={() => void handleDelete()}>
               Eliminar ejercicio
             </RowButton>
           )}
-          <p className={styles.manageHint}>
-            {inUse
-              ? 'Este ejercicio está en una rutina o en tu historial: archívalo para ocultarlo sin perder datos.'
-              : 'Archivar lo oculta del catálogo sin borrarlo.'}
-          </p>
+          {usage && <p className={styles.manageHint}>{manageHint(usage)}</p>}
         </div>
       )}
       {confirmSheet}
     </Sheet>
   )
+}
+
+const listFormat = new Intl.ListFormat('es', { type: 'conjunction' })
+const quoted = (names: readonly string[]) => listFormat.format(names.map((name) => `«${name}»`))
+
+/** What deleting does to routines and history (data/exercises.ts › deleteExercise). */
+function deleteMessage({ routineNames, sessionCount }: ExerciseUsage): string {
+  const parts: string[] = []
+  if (routineNames.length === 1) parts.push(`Se quitará de la rutina ${quoted(routineNames)}.`)
+  if (routineNames.length > 1) parts.push(`Se quitará de las rutinas ${quoted(routineNames)}.`)
+  if (sessionCount > 0) parts.push('Tu historial lo seguirá mostrando, pero ya no verás su progreso.')
+  parts.push('No se puede deshacer.')
+  return parts.join(' ')
+}
+
+/** Why it can't be deleted yet, or the difference between archiving and deleting. */
+function manageHint({ blocker, sessionCount }: ExerciseUsage): string {
+  if (blocker?.reason === 'active-workout') {
+    return 'Está en el entrenamiento en curso: termínalo o descártalo para poder eliminarlo.'
+  }
+  if (blocker?.reason === 'only-exercise') {
+    return `Es el único ejercicio de la rutina «${blocker.routineName}»: agrégale otro o elimina la rutina para poder eliminarlo.`
+  }
+  return sessionCount > 0
+    ? 'Archivar lo oculta y conserva su progreso. Eliminar lo quita del catálogo; tu historial lo sigue mostrando.'
+    : 'Archivar lo oculta del catálogo sin borrarlo.'
 }

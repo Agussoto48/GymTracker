@@ -56,7 +56,7 @@ export async function startSession(routineId: Id | null = null): Promise<Workout
       routineName: null,
       startedAt: now(),
       finishedAt: null,
-      exercises: exerciseIds.map((exerciseId) => ({ exerciseId, notes: '', sets: [], finishedAt: null })),
+      exercises: exerciseIds.map((exerciseId) => ({ exerciseId, notes: '', sets: [], finishedAt: null, deletedExercise: null })),
       exerciseIds: [],
     })
     await db.sessions.add(session)
@@ -98,7 +98,7 @@ export async function addExerciseToSession(sessionId: Id, exerciseId: Id): Promi
   if (!exercise) throw new NotFoundError('Exercise', exerciseId)
   return changeActiveSession(sessionId, (session) => {
     if (session.exercises.some((e) => e.exerciseId === exerciseId)) return session
-    return { ...session, exercises: [...session.exercises, { exerciseId, notes: '', sets: [], finishedAt: null }] }
+    return { ...session, exercises: [...session.exercises, { exerciseId, notes: '', sets: [], finishedAt: null, deletedExercise: null }] }
   })
 }
 

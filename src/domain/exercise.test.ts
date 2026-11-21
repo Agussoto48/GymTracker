@@ -3,9 +3,11 @@ import {
   deduceKind,
   EXERCISE_NAME_MAX_LENGTH,
   compareByName,
+  exerciseDeleteBlocker,
   isDuplicateName,
   nameKey,
   normalizeName,
+  parseDeletedExercise,
   validateExercise,
   type ExerciseInput,
 } from './exercise.ts'
@@ -127,4 +129,37 @@ describe('compareByName', () => {
     const names = ['remo', 'Curl', 'Ñandú', 'press'].map((name) => ({ name }))
     expect(names.sort(compareByName).map((e) => e.name)).toEqual(['Curl', 'Ñandú', 'press', 'remo'])
   })
+})
+
+describe('exerciseDeleteBlocker', () => {
+  const routine = (name: string, exerciseIds: string[]) => ({ name, exerciseIds })
+  const active = (...ids: string[]) => ({
+    exercises: ids.map((exerciseId) => ({ exerciseId, notes: '', sets: [], finishedAt: null, deletedExercise: null })),
+  })
+
+  test('nothing blocks an exercise in routines with others, or in another workout', () => {
+    expect(exerciseDeleteBlocker('e1', [routine('Push', ['e1', 'e2'])], active('e2'))).toBeNull()
+    expect(exerciseDeleteBlocker('e1', [], null)).toBeNull()
+  })
+
+  test('the workout in progress blocks it first, then being a routine\'s only exercise', () => {
+    expect(exerciseDeleteBlocker('e1', [routine('Solo', ['e1'])], active('e2', 'e1'))).toEqual({ reason: 'active-workout' })
+    expect(exerciseDeleteBlocker('e1', [routine('Push', ['e1', 'e2']), routine('Solo', ['e1'])], null)).toEqual({
+      reason: 'only-exercise',
+      routineName: 'Solo',
+    })
+  })
+})
+
+describe('parseDeletedExercise', () => {
+  test('keeps a normalized name and a known kind', () => {
+    expect(parseDeletedExercise({ name: '  Fondos ', kind: 'bodyweight', extra: 1 })).toEqual({ name: 'Fondos', kind: 'bodyweight' })
+  })
+
+  test.each([null, undefined, 'Fondos', {}, { name: ' ', kind: 'weighted' }, { name: 'x'.repeat(EXERCISE_NAME_MAX_LENGTH + 1), kind: 'weighted' }, { name: 'Fondos', kind: 'cardio' }])(
+    'rejects %j',
+    (raw) => {
+      expect(parseDeletedExercise(raw)).toBeNull()
+    },
+  )
 })

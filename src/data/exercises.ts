@@ -2,12 +2,14 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import {
   compareByName,
   deduceKind,
+  exerciseDeleteBlocker,
   isDuplicateName,
   validateExercise,
   type ExerciseFields,
+  type DeleteBlocker,
   type ExerciseInput,
 } from '../domain/exercise.ts'
-import type { Exercise, Id } from '../domain/types.ts'
+import type { Exercise, Id, Routine, WorkoutSession } from '../domain/types.ts'
 import { db } from './db.ts'
 import { NotFoundError, ValidationError } from './errors.ts'
 import { createId } from './ids.ts'
@@ -93,19 +95,53 @@ export async function setExerciseArchived(id: Id, archived: boolean): Promise<vo
   if (changed === 0) throw new NotFoundError('Exercise', id)
 }
 
-/** Permanent delete is only allowed when no routine or session references the exercise. */
+/**
+ * Deletes an exercise from the catalog. Past workouts keep its name and kind (like a receipt) and
+ * routines drop it, all in one transaction. Refused while it is in the workout in progress or is a
+ * routine's only exercise (domain/exercise.ts › exerciseDeleteBlocker).
+ */
 export async function deleteExercise(id: Id): Promise<void> {
   await db.transaction('rw', db.exercises, db.routines, db.sessions, async () => {
-    if (await isExerciseInUse(id)) {
-      throw new Error('Exercise is in use; archive it instead.')
-    }
+    const exercise = await db.exercises.get(id)
+    if (!exercise) throw new NotFoundError('Exercise', id)
+    const usage = await getExerciseUsage(id)
+    if (usage.blocker) throw new Error(`Exercise can't be deleted: ${usage.blocker.reason}.`)
+
+    const deletedExercise = { name: exercise.name, kind: exercise.kind }
+    await db.sessions
+      .where('exerciseIds')
+      .equals(id)
+      .modify((session: WorkoutSession) => {
+        for (const entry of session.exercises) if (entry.exerciseId === id) entry.deletedExercise = deletedExercise
+      })
+    const timestamp = now()
+    await db.routines
+      .filter((routine) => routine.exerciseIds.includes(id))
+      .modify((routine: Routine) => {
+        routine.exerciseIds = routine.exerciseIds.filter((exerciseId) => exerciseId !== id)
+        routine.updatedAt = timestamp
+      })
     await db.exercises.delete(id)
   })
 }
 
-export async function isExerciseInUse(id: Id): Promise<boolean> {
-  if ((await countSessionsWith(id)) > 0) return true
-  return (await db.routines.filter((routine) => routine.exerciseIds.includes(id)).count()) > 0
+/** Where an exercise is used, to explain what deleting it does (or why it can't be deleted yet). */
+export type ExerciseUsage = {
+  /** Routines that include it (archived ones too), by name. */
+  routineNames: string[]
+  /** Workouts with it, finished or in progress. */
+  sessionCount: number
+  blocker: DeleteBlocker | null
+}
+
+export async function getExerciseUsage(id: Id): Promise<ExerciseUsage> {
+  const routines = (await db.routines.filter((routine) => routine.exerciseIds.includes(id)).toArray()).sort(compareByName)
+  const active = await db.sessions.filter((session) => session.finishedAt === null).first()
+  return {
+    routineNames: routines.map((routine) => routine.name),
+    sessionCount: await countSessionsWith(id),
+    blocker: exerciseDeleteBlocker(id, routines, active ?? null),
+  }
 }
 
 function countSessionsWith(id: Id): Promise<number> {
@@ -121,7 +157,7 @@ export function useExercises(): Exercise[] | undefined {
   return useLiveQuery(listExercises)
 }
 
-/** Live "in use" flag for the edit sheet; `undefined` while loading. */
-export function useExerciseInUse(id: Id | null): boolean | undefined {
-  return useLiveQuery(() => (id ? isExerciseInUse(id) : false), [id])
+/** Live usage for the edit sheet; `undefined` while loading, null for a new exercise. */
+export function useExerciseUsage(id: Id | null): ExerciseUsage | null | undefined {
+  return useLiveQuery(async () => (id ? getExerciseUsage(id) : null), [id])
 }

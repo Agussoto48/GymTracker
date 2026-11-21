@@ -5,7 +5,7 @@ import { db } from './db.ts'
 
 const t = '2026-11-10T18:00:00.000Z'
 
-test('upgrading a v1 database keeps every record, gives exercises empty targets, leaves exercises pending and sessions without a deleted routine name', async () => {
+test('upgrading a v1 database keeps every record, gives exercises empty targets, leaves exercises pending and sessions without a deleted routine name or exercise copy', async () => {
   db.close()
   await Dexie.delete('gymtracker')
 
@@ -38,7 +38,7 @@ test('upgrading a v1 database keeps every record, gives exercises empty targets,
   v1.close()
 
   await db.open()
-  expect(db.verno).toBe(4)
+  expect(db.verno).toBe(5)
   expect(await db.exercises.get('e1')).toEqual({
     ...exercise,
     targetWeight: null,
@@ -50,7 +50,7 @@ test('upgrading a v1 database keeps every record, gives exercises empty targets,
   expect(await db.sessions.get('s1')).toEqual({
     ...session,
     routineName: null,
-    exercises: [{ ...session.exercises[0], finishedAt: null }],
+    exercises: [{ ...session.exercises[0], finishedAt: null, deletedExercise: null }],
   })
 })
 
@@ -70,4 +70,5 @@ test('a session written without finished flags (by an older build) reads with pe
   await db.table('sessions').add(raw)
   expect((await db.sessions.get('old-s'))?.exercises[0].finishedAt).toBeNull()
   expect((await db.sessions.get('old-s'))?.routineName).toBeNull()
+  expect((await db.sessions.get('old-s'))?.exercises[0].deletedExercise).toBeNull()
 })

@@ -2,11 +2,12 @@ import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, test } from 'vitest'
 import type { WorkoutSession } from '../domain/types.ts'
 import { db } from './db.ts'
+import { getLastPerformance } from './sessions.ts'
 import { NotFoundError, ValidationError } from './errors.ts'
 import {
   createExercise,
   deleteExercise,
-  isExerciseInUse,
+  getExerciseUsage,
   listExercises,
   setExerciseArchived,
   updateExercise,
@@ -14,16 +15,24 @@ import {
 
 const bench = { name: 'Press banca', kind: 'weighted', defaultUnit: 'kg', notes: '', targetSets: 3 }
 
-function sessionWith(exerciseId: string): WorkoutSession {
+/** A workout in progress with the exercise, or a finished one with a set of it. */
+function sessionWith(exerciseId: string, finished = false): WorkoutSession {
+  const t = new Date().toISOString()
+  const sets = finished ? [{ id: crypto.randomUUID(), weight: { value: 60, unit: 'kg' as const }, reps: 8, rpe: null, completedAt: t }] : []
   return {
     id: crypto.randomUUID(),
     routineId: null,
     routineName: null,
-    startedAt: new Date().toISOString(),
-    finishedAt: null,
-    exercises: [{ exerciseId, notes: '', sets: [], finishedAt: null }],
+    startedAt: t,
+    finishedAt: finished ? t : null,
+    exercises: [{ exerciseId, notes: '', sets, finishedAt: finished ? t : null, deletedExercise: null }],
     exerciseIds: [exerciseId],
   }
+}
+
+async function addRoutine(id: string, name: string, exerciseIds: string[]) {
+  const timestamp = '2026-01-01T00:00:00.000Z'
+  await db.routines.add({ id, name, exerciseIds, archivedAt: null, createdAt: timestamp, updatedAt: timestamp })
 }
 
 beforeEach(async () => {
@@ -171,25 +180,63 @@ describe('archive and delete', () => {
     expect(await db.exercises.count()).toBe(0)
   })
 
-  test('refuses to delete an exercise used in a session', async () => {
+  test('deletes a used exercise: past workouts keep its name and kind, its sets untouched', async () => {
+    const created = await createExercise(bench)
+    const session = sessionWith(created.id, true)
+    await db.sessions.add(session)
+    await deleteExercise(created.id)
+
+    expect(await db.exercises.count()).toBe(0)
+    const [entry] = (await db.sessions.get(session.id))!.exercises
+    expect(entry.deletedExercise).toEqual({ name: 'Press banca', kind: 'weighted' })
+    expect(entry.sets).toEqual(session.exercises[0].sets)
+  })
+
+  test('a new exercise with the same name starts without the deleted one\'s history', async () => {
+    const created = await createExercise(bench)
+    await db.sessions.add(sessionWith(created.id, true))
+    await deleteExercise(created.id)
+    const again = await createExercise(bench)
+    expect(await getLastPerformance(again.id)).toBeNull()
+  })
+
+  test('removes it from the routines that include it', async () => {
+    const created = await createExercise(bench)
+    const other = await createExercise({ ...bench, name: 'Remo' })
+    await addRoutine('r1', 'Push', [created.id, other.id])
+    await deleteExercise(created.id)
+    const routine = await db.routines.get('r1')
+    expect(routine?.exerciseIds).toEqual([other.id])
+    expect(routine?.updatedAt).not.toBe('2026-01-01T00:00:00.000Z')
+  })
+
+  test('refuses while it is in the workout in progress, changing nothing', async () => {
     const created = await createExercise(bench)
     await db.sessions.add(sessionWith(created.id))
-    expect(await isExerciseInUse(created.id)).toBe(true)
+    expect((await getExerciseUsage(created.id)).blocker).toEqual({ reason: 'active-workout' })
     await expect(deleteExercise(created.id)).rejects.toThrow()
     expect(await db.exercises.count()).toBe(1)
   })
 
-  test('refuses to delete an exercise used in a routine', async () => {
+  test("refuses when it is a routine's only exercise, changing nothing", async () => {
     const created = await createExercise(bench)
-    const timestamp = new Date().toISOString()
-    await db.routines.add({
-      id: 'r1',
-      name: 'Push',
-      exerciseIds: [created.id],
-      archivedAt: null,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    })
+    await db.sessions.add(sessionWith(created.id, true))
+    await addRoutine('r1', 'Push', [created.id])
     await expect(deleteExercise(created.id)).rejects.toThrow()
+    expect(await db.exercises.count()).toBe(1)
+    expect((await db.routines.get('r1'))?.exerciseIds).toEqual([created.id])
+    expect((await db.sessions.toArray())[0].exercises[0].deletedExercise).toBeNull()
   })
+
+  test('reports where it is used', async () => {
+    const created = await createExercise(bench)
+    const other = await createExercise({ ...bench, name: 'Remo' })
+    await addRoutine('r1', 'Pull', [created.id, other.id])
+    await addRoutine('r2', 'Full', [other.id, created.id])
+    await db.sessions.add(sessionWith(created.id, true))
+    expect(await getExerciseUsage(created.id)).toEqual({ routineNames: ['Full', 'Pull'], sessionCount: 1, blocker: null })
+    await addRoutine('r3', 'Solo', [created.id])
+    expect((await getExerciseUsage(created.id)).blocker).toEqual({ reason: 'only-exercise', routineName: 'Solo' })
+  })
+
 })

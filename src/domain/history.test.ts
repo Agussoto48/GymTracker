@@ -11,7 +11,7 @@ const set = (value: number, reps: number): WorkoutSet => ({
   completedAt: '2026-11-10T18:00:00.000Z',
 })
 
-const entry = (exerciseId: string, sets: WorkoutSet[], notes = ''): SessionExercise => ({ exerciseId, notes, sets, finishedAt: null })
+const entry = (exerciseId: string, sets: WorkoutSet[], notes = ''): SessionExercise => ({ exerciseId, notes, sets, finishedAt: null, deletedExercise: null })
 
 function session(
   id: string,
