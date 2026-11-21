@@ -89,6 +89,19 @@ body {
   color: var(--label);
   font-family: var(--font-sans);
   line-height: 1.4;
+  /* Like a native app: a long press must not select text or open the callout (long press is reserved for actions). */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Text fields stay editable and selectable (iOS Safari can't type into user-select: none). */
+input,
+textarea,
+[contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
 }
 
 /* Keep the page behind an open sheet from scrolling. */
