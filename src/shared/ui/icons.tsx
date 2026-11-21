@@ -120,3 +120,13 @@ export function ClearIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+/** Circle with a check, like SF Symbols' checkmark.circle: the "Seleccionar" menu item. */
+export function SelectIcon({ className }: IconProps) {
+  return (
+    <svg {...base} fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8 12.25l2.75 2.75L16 9.5" />
+    </svg>
+  )
+}

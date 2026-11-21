@@ -3,16 +3,26 @@ import { beforeEach, describe, expect, test } from 'vitest'
 import type { Exercise } from '../domain/types.ts'
 import { db } from './db.ts'
 import { NotFoundError, ValidationError } from './errors.ts'
-import { createExercise, deleteExercise, setExerciseArchived } from './exercises.ts'
+import {
+  createExercise,
+  deleteExercise,
+  deleteExercises,
+  previewExerciseDeletion,
+  setExerciseArchived,
+  setExercisesArchived,
+} from './exercises.ts'
 import {
   createRoutine,
   deleteRoutine,
   countRoutineWorkouts,
+  countRoutinesWorkouts,
+  deleteRoutines,
   listRoutines,
   setRoutineArchived,
+  setRoutinesArchived,
   updateRoutine,
 } from './routines.ts'
-import { addSet, finishSession, getLastPerformance, startSession } from './sessions.ts'
+import { addExerciseToSession, addSet, finishSession, getLastPerformance, startSession } from './sessions.ts'
 
 let bench: Exercise
 let pec: Exercise
@@ -117,5 +127,63 @@ describe('starting a workout from a routine', () => {
     const last = await getLastPerformance(pec.id, second.id)
     expect(last?.sessionId).toBe(first.id)
     expect(last?.sets[0]).toMatchObject({ weight: { value: 60, unit: 'kg' }, reps: 10 })
+  })
+})
+
+describe('several at once', () => {
+  test('archives and restores several exercises and routines together', async () => {
+    await setExercisesArchived([bench.id, pec.id, 'missing'], true)
+    const archived = await db.exercises.bulkGet([bench.id, pec.id, row.id])
+    expect(archived.map((e) => e?.archivedAt !== null)).toEqual([true, true, false])
+    await setExercisesArchived([bench.id, pec.id], false)
+    expect((await db.exercises.toArray()).every((e) => e.archivedAt === null)).toBe(true)
+
+    const push = await createRoutine({ name: 'Push', exerciseIds: [bench.id] })
+    const legs = await createRoutine({ name: 'Pierna', exerciseIds: [row.id] })
+    await setRoutinesArchived([push.id, legs.id], true)
+    expect((await db.routines.toArray()).every((r) => r.archivedAt !== null)).toBe(true)
+  })
+
+  test('deleting several routines keeps all their workouts, with their names', async () => {
+    const push = await createRoutine({ name: 'Push', exerciseIds: [bench.id] })
+    const legs = await createRoutine({ name: 'Pierna', exerciseIds: [row.id] })
+    const kept = await createRoutine({ name: 'Torso', exerciseIds: [pec.id] })
+    const pushWorkout = await startSession(push.id)
+    await addSet(pushWorkout.id, bench.id, { weight: 60, unit: 'kg', reps: 8, rpe: null })
+    await finishSession(pushWorkout.id)
+    expect(await countRoutinesWorkouts([push.id, legs.id])).toBe(1)
+
+    await deleteRoutines([push.id, legs.id])
+    expect((await listRoutines()).map((r) => r.id)).toEqual([kept.id])
+    expect(await db.sessions.get(pushWorkout.id)).toMatchObject({ routineId: null, routineName: 'Push' })
+  })
+
+  test('previews deleting several exercises: blocked ones are skipped with the reason', async () => {
+    await createRoutine({ name: 'Push', exerciseIds: [bench.id, pec.id] })
+    const workout = await startSession(null)
+    await addExerciseToSession(workout.id, row.id)
+
+    const preview = await previewExerciseDeletion([bench.id, pec.id, row.id])
+    expect(preview.deletable.map((e) => e.name)).toEqual(['Press banca'])
+    expect(preview.skipped.map((s) => [s.exercise.name, s.blocker])).toEqual([
+      ['Pec Deck', { reason: 'only-exercise', routineName: 'Push' }],
+      ['Remo', { reason: 'active-workout' }],
+    ])
+    expect(preview.routineNames).toEqual(['Push'])
+    expect(preview.usedCount).toBe(0)
+  })
+
+  test('deletes the deletable ones in one go, keeping history and the rest', async () => {
+    const push = await createRoutine({ name: 'Push', exerciseIds: [bench.id, pec.id] })
+    const done = await startSession(push.id)
+    await addSet(done.id, bench.id, { weight: 60, unit: 'kg', reps: 8, rpe: null })
+    await finishSession(done.id)
+    expect((await previewExerciseDeletion([bench.id, pec.id])).usedCount).toBe(1)
+
+    expect(await deleteExercises([bench.id, pec.id])).toBe(1)
+    expect(await db.exercises.get(bench.id)).toBeUndefined()
+    expect(await db.exercises.get(pec.id)).toBeDefined()
+    expect((await db.routines.get(push.id))?.exerciseIds).toEqual([pec.id])
+    expect((await db.sessions.get(done.id))?.exercises[0].deletedExercise).toEqual({ name: 'Press banca', kind: 'weighted' })
   })
 })

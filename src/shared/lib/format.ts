@@ -83,3 +83,10 @@ export function formatDuration(minutes: number): string {
 export function count(n: number, one: string, many: string): string {
   return `${n} ${n === 1 ? one : many}`
 }
+
+const listFormat = new Intl.ListFormat('es', { type: 'conjunction' })
+
+/** quoted(['Push', 'Pierna']) → "«Push» y «Pierna»" */
+export function quoted(names: readonly string[]): string {
+  return listFormat.format(names.map((name) => `«${name}»`))
+}

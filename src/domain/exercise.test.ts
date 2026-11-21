@@ -9,6 +9,7 @@ import {
   nameKey,
   normalizeName,
   parseDeletedExercise,
+  planExerciseDeletion,
   validateExercise,
   type ExerciseInput,
 } from './exercise.ts'
@@ -176,4 +177,42 @@ describe('parseDeletedExercise', () => {
       expect(parseDeletedExercise(raw)).toBeNull()
     },
   )
+})
+
+describe('planExerciseDeletion', () => {
+  const routine = (name: string, exerciseIds: string[]) => ({ name, exerciseIds })
+  const active = (...ids: string[]) => ({
+    exercises: ids.map((exerciseId) => ({ exerciseId, notes: '', sets: [], finishedAt: null, deletedExercise: null })),
+  })
+
+  test('deletes every exercise when nothing blocks them', () => {
+    expect(planExerciseDeletion(['a', 'b'], [routine('Push', ['a', 'b', 'c'])], null)).toEqual({
+      deletable: ['a', 'b'],
+      skipped: [],
+    })
+  })
+
+  test('skips the ones in the workout in progress and keeps the rest', () => {
+    expect(planExerciseDeletion(['a', 'b'], [], active('b'))).toEqual({
+      deletable: ['a'],
+      skipped: [{ id: 'b', blocker: { reason: 'active-workout' } }],
+    })
+  })
+
+  test('keeps the last exercise of a routine when all of them are selected', () => {
+    expect(planExerciseDeletion(['a', 'b'], [routine('Pierna', ['a', 'b'])], null)).toEqual({
+      deletable: ['a'],
+      skipped: [{ id: 'b', blocker: { reason: 'only-exercise', routineName: 'Pierna' } }],
+    })
+  })
+
+  test('a routine that already has one exercise keeps it', () => {
+    expect(planExerciseDeletion(['a'], [routine('Solo', ['a'])], null).skipped).toEqual([
+      { id: 'a', blocker: { reason: 'only-exercise', routineName: 'Solo' } },
+    ])
+  })
+
+  test('ignores repeated ids', () => {
+    expect(planExerciseDeletion(['a', 'a'], [], null)).toEqual({ deletable: ['a'], skipped: [] })
+  })
 })

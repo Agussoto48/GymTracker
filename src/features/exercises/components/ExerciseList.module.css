@@ -24,7 +24,9 @@
   cursor: pointer;
 }
 
-.row:active {
+/* Selected in selection mode: tinted like the pressed row, so it reads as picked. */
+.row:active,
+.selected {
   background: var(--surface-2);
 }
 

@@ -1,0 +1,22 @@
+/* 24 px, like iOS edit mode. Empty ring --label-3 (≥ 3.7:1 on cards); selected fill --accent
+   (≥ 3:1 on cards: a state, not a button) with the check in --on-accent. */
+.mark {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1.5px solid var(--label-3);
+  border-radius: 50%;
+}
+
+.selected {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.mark svg {
+  width: 16px;
+  height: 16px;
+}

@@ -1,4 +1,5 @@
-import type { Exercise } from '../../../domain/types.ts'
+import type { Exercise, Id } from '../../../domain/types.ts'
+import { SelectionMark } from '../../../shared/ui/SelectionMark.tsx'
 import styles from './ExerciseList.module.css'
 
 const KIND_LABEL = { weighted: 'Con peso', bodyweight: 'Peso corporal' } as const
@@ -6,14 +7,22 @@ const KIND_LABEL = { weighted: 'Con peso', bodyweight: 'Peso corporal' } as cons
 type ExerciseListProps = {
   exercises: readonly Exercise[]
   onSelect: (exercise: Exercise) => void
+  /** In selection mode, a tap toggles the row instead of opening it. */
+  selection?: { isSelected: (id: Id) => boolean; toggle: (id: Id) => void }
 }
 
-export function ExerciseList({ exercises, onSelect }: ExerciseListProps) {
+export function ExerciseList({ exercises, onSelect, selection }: ExerciseListProps) {
   return (
     <ul className={styles.list}>
       {exercises.map((exercise) => (
         <li key={exercise.id}>
-          <button type="button" className={styles.row} onClick={() => onSelect(exercise)}>
+          <button
+            type="button"
+            className={`${styles.row} ${selection?.isSelected(exercise.id) ? styles.selected : ''}`}
+            aria-pressed={selection ? selection.isSelected(exercise.id) : undefined}
+            onClick={() => (selection ? selection.toggle(exercise.id) : onSelect(exercise))}
+          >
+            {selection && <SelectionMark selected={selection.isSelected(exercise.id)} />}
             <span className={styles.text}>
               <span className={styles.name}>{exercise.name}</span>
               <span className={styles.meta}>
@@ -22,7 +31,7 @@ export function ExerciseList({ exercises, onSelect }: ExerciseListProps) {
               </span>
             </span>
             {/* Words, not a chevron: the row opens the edit form (a chevron read as "expand"). */}
-            <span className={styles.edit}>Editar</span>
+            {!selection && <span className={styles.edit}>Editar</span>}
           </button>
         </li>
       ))}

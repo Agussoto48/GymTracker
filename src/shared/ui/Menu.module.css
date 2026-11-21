@@ -1,0 +1,81 @@
+/*
+ * Pull-down menu under the toolbar's "⋯": the glass of the toast and alerts (it floats above the
+ * content), rows of 48 px with the icon first. Opaque under Increase Contrast or Reduce Transparency.
+ */
+.menu {
+  position: fixed;
+  inset: auto;
+  min-width: 220px;
+  max-width: calc(100vw - 2 * var(--space-4));
+  margin: 0;
+  padding: var(--space-2) 0;
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius-card);
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: 0 12px 36px rgb(0 0 0 / 0.22);
+  color: var(--label);
+}
+
+@media (prefers-contrast: more), (prefers-reduced-transparency: reduce) {
+  .menu {
+    border-color: var(--separator);
+    background: var(--glass-opaque);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* Grows from the button it came from. Transitions, so closing mid-way reverses. */
+@media (prefers-reduced-motion: no-preference) {
+  .menu {
+    transform-origin: top left;
+    transition-property: opacity, scale, display, overlay;
+    transition-duration: 150ms;
+    transition-timing-function: ease-out;
+    transition-behavior: allow-discrete;
+  }
+
+  .menu:not(:popover-open) {
+    opacity: 0;
+    scale: 0.96;
+  }
+
+  @starting-style {
+    .menu:popover-open {
+      opacity: 0;
+      scale: 0.96;
+    }
+  }
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 48px;
+  padding: 0 var(--space-4);
+  border: 0;
+  background: none;
+  font-size: var(--text-body);
+  text-align: start;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.item:active,
+.item:focus-visible {
+  background: color-mix(in srgb, var(--label) 10%, transparent);
+}
+
+.item:focus-visible {
+  outline-offset: -3px;
+}
+
+.icon {
+  display: grid;
+  width: 24px;
+  height: 24px;
+}

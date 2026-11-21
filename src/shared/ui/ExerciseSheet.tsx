@@ -16,7 +16,7 @@ import {
   type ExerciseUsage,
 } from '../../data/exercises.ts'
 import { useLastPerformance } from '../../data/sessions.ts'
-import { formatNumber, formatShortDate } from '../lib/format.ts'
+import { formatNumber, formatShortDate, quoted } from '../lib/format.ts'
 import { SegmentedControl } from './SegmentedControl.tsx'
 import { useConfirm } from './useConfirm.tsx'
 import { useToast } from './useToast.ts'
@@ -293,8 +293,6 @@ export function ExerciseSheet({ exercise, initialName = '', onClose, onCreated }
   )
 }
 
-const listFormat = new Intl.ListFormat('es', { type: 'conjunction' })
-const quoted = (names: readonly string[]) => listFormat.format(names.map((name) => `«${name}»`))
 
 /** What deleting does to routines and history (data/exercises.ts › deleteExercise). */
 function deleteMessage({ routineNames, sessionCount }: ExerciseUsage): string {

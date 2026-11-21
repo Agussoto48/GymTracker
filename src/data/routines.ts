@@ -42,6 +42,12 @@ export async function updateRoutine(id: Id, input: RoutineInput): Promise<Routin
   })
 }
 
+/** Archives or restores several routines together (the ones that no longer exist are ignored). */
+export async function setRoutinesArchived(ids: readonly Id[], archived: boolean): Promise<void> {
+  const timestamp = now()
+  await db.routines.where('id').anyOf([...ids]).modify({ archivedAt: archived ? timestamp : null, updatedAt: timestamp })
+}
+
 export async function setRoutineArchived(id: Id, archived: boolean): Promise<void> {
   const timestamp = now()
   const changed = await db.routines.update(id, { archivedAt: archived ? timestamp : null, updatedAt: timestamp })
@@ -61,11 +67,29 @@ export async function deleteRoutine(id: Id): Promise<void> {
   await db.transaction('rw', db.routines, db.sessions, async () => {
     const routine = await db.routines.get(id)
     if (!routine) throw new NotFoundError('Routine', id)
-    await db.sessions
-      .filter((session) => session.routineId === id)
-      .modify({ routineId: null, routineName: routine.name })
-    await db.routines.delete(id)
+    await removeRoutine(routine)
   })
+}
+
+/** Deletes several routines in one transaction; their workouts stay in history with their names. */
+export async function deleteRoutines(ids: readonly Id[]): Promise<void> {
+  await db.transaction('rw', db.routines, db.sessions, async () => {
+    const routines = (await db.routines.bulkGet([...ids])).filter((r): r is Routine => r !== undefined)
+    for (const routine of routines) await removeRoutine(routine)
+  })
+}
+
+async function removeRoutine(routine: Routine): Promise<void> {
+  await db.sessions
+    .filter((session) => session.routineId === routine.id)
+    .modify({ routineId: null, routineName: routine.name })
+  await db.routines.delete(routine.id)
+}
+
+/** How many workouts (finished or in progress) came from any of these routines. */
+export async function countRoutinesWorkouts(ids: readonly Id[]): Promise<number> {
+  const wanted = new Set(ids)
+  return db.sessions.filter((session) => session.routineId !== null && wanted.has(session.routineId)).count()
 }
 
 export async function listRoutines(): Promise<Routine[]> {

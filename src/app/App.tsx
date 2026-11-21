@@ -4,6 +4,7 @@ import { ProgressScreen } from '../features/progress/ProgressScreen.tsx'
 import { RoutinesScreen } from '../features/routines/RoutinesScreen.tsx'
 import { WorkoutScreen } from '../features/workout/WorkoutScreen.tsx'
 import { ToastProvider } from '../shared/ui/Toast.tsx'
+import { TabBarContext } from '../shared/ui/useTabBar.ts'
 import { RotateNotice } from './RotateNotice.tsx'
 import { TabBar, type TabId } from './TabBar.tsx'
 import { UpdateBanner } from './UpdateBanner.tsx'
@@ -18,15 +19,19 @@ const SCREENS: Record<TabId, ComponentType> = {
 
 export default function App() {
   const [tab, setTab] = useState<TabId>('workout')
+  // A screen in selection mode shows its own actions where the tab bar was (like Mail or WhatsApp).
+  const [tabBarHidden, setTabBarHidden] = useState(false)
   const Screen = SCREENS[tab]
 
   return (
     <ToastProvider>
-      <main className={styles.content}>
-        <Screen />
-      </main>
+      <TabBarContext.Provider value={setTabBarHidden}>
+        <main className={styles.content}>
+          <Screen />
+        </main>
+      </TabBarContext.Provider>
       <UpdateBanner />
-      <TabBar current={tab} onSelect={setTab} />
+      {!tabBarHidden && <TabBar current={tab} onSelect={setTab} />}
       <RotateNotice />
     </ToastProvider>
   )

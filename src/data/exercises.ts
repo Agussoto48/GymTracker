@@ -4,6 +4,7 @@ import {
   deduceKind,
   exerciseDeleteBlocker,
   isDuplicateName,
+  planExerciseDeletion,
   validateExercise,
   type ExerciseFields,
   type DeleteBlocker,
@@ -86,6 +87,12 @@ export async function updateExercise(id: Id, input: ExerciseInput): Promise<Exer
   })
 }
 
+/** Archives or restores several exercises together (the ones that no longer exist are ignored). */
+export async function setExercisesArchived(ids: readonly Id[], archived: boolean): Promise<void> {
+  const timestamp = now()
+  await db.exercises.where('id').anyOf([...ids]).modify({ archivedAt: archived ? timestamp : null, updatedAt: timestamp })
+}
+
 export async function setExerciseArchived(id: Id, archived: boolean): Promise<void> {
   const timestamp = now()
   const changed = await db.exercises.update(id, {
@@ -106,23 +113,78 @@ export async function deleteExercise(id: Id): Promise<void> {
     if (!exercise) throw new NotFoundError('Exercise', id)
     const usage = await getExerciseUsage(id)
     if (usage.blocker) throw new Error(`Exercise can't be deleted: ${usage.blocker.reason}.`)
-
-    const deletedExercise = { name: exercise.name, kind: exercise.kind }
-    await db.sessions
-      .where('exerciseIds')
-      .equals(id)
-      .modify((session: WorkoutSession) => {
-        for (const entry of session.exercises) if (entry.exerciseId === id) entry.deletedExercise = deletedExercise
-      })
-    const timestamp = now()
-    await db.routines
-      .filter((routine) => routine.exerciseIds.includes(id))
-      .modify((routine: Routine) => {
-        routine.exerciseIds = routine.exerciseIds.filter((exerciseId) => exerciseId !== id)
-        routine.updatedAt = timestamp
-      })
-    await db.exercises.delete(id)
+    await removeExercise(exercise)
   })
+}
+
+/** Inside a transaction on exercises, routines and sessions, with the blockers already checked. */
+async function removeExercise(exercise: Exercise): Promise<void> {
+  const { id } = exercise
+  const deletedExercise = { name: exercise.name, kind: exercise.kind }
+  await db.sessions
+    .where('exerciseIds')
+    .equals(id)
+    .modify((session: WorkoutSession) => {
+      for (const entry of session.exercises) if (entry.exerciseId === id) entry.deletedExercise = deletedExercise
+    })
+  const timestamp = now()
+  await db.routines
+    .filter((routine) => routine.exerciseIds.includes(id))
+    .modify((routine: Routine) => {
+      routine.exerciseIds = routine.exerciseIds.filter((exerciseId) => exerciseId !== id)
+      routine.updatedAt = timestamp
+    })
+  await db.exercises.delete(id)
+}
+
+/** What deleting several exercises would do, to confirm it in one question. */
+export type ExerciseDeletionPreview = {
+  deletable: Exercise[]
+  /** Selected but kept, with the reason (same rules as deleting one). */
+  skipped: { exercise: Exercise; blocker: DeleteBlocker }[]
+  /** Routines that lose at least one of the deleted exercises, by name. */
+  routineNames: string[]
+  /** How many of the deleted ones appear in some workout (their history stays, as a receipt). */
+  usedCount: number
+}
+
+/** `ids` in the order they were shown: when a whole routine is selected, the last one stays. */
+export async function previewExerciseDeletion(ids: readonly Id[]): Promise<ExerciseDeletionPreview> {
+  const { exercises, plan, routines } = await planDeletion(ids)
+  const byId = new Map(exercises.map((e) => [e.id, e]))
+  const deleted = new Set(plan.deletable)
+  const used = await Promise.all(plan.deletable.map(async (id) => (await countSessionsWith(id)) > 0))
+  return {
+    deletable: plan.deletable.map((id) => byId.get(id)!),
+    skipped: plan.skipped.map(({ id, blocker }) => ({ exercise: byId.get(id)!, blocker })),
+    routineNames: routines.filter((r) => r.exerciseIds.some((id) => deleted.has(id))).map((r) => r.name),
+    usedCount: used.filter(Boolean).length,
+  }
+}
+
+/**
+ * Deletes several exercises in one transaction, skipping the blocked ones (rechecked here, in case
+ * something changed since the preview). Returns how many were deleted.
+ */
+export async function deleteExercises(ids: readonly Id[]): Promise<number> {
+  return db.transaction('rw', db.exercises, db.routines, db.sessions, async () => {
+    const { exercises, plan } = await planDeletion(ids)
+    const byId = new Map(exercises.map((e) => [e.id, e]))
+    for (const id of plan.deletable) await removeExercise(byId.get(id)!)
+    return plan.deletable.length
+  })
+}
+
+async function planDeletion(ids: readonly Id[]) {
+  const exercises = (await db.exercises.bulkGet([...ids])).filter((e): e is Exercise => e !== undefined)
+  const routines = (await db.routines.toArray()).sort(compareByName)
+  const active = await db.sessions.filter((session) => session.finishedAt === null).first()
+  const plan = planExerciseDeletion(
+    exercises.map((e) => e.id),
+    routines,
+    active ?? null,
+  )
+  return { exercises, plan, routines }
 }
 
 /** Where an exercise is used, to explain what deleting it does (or why it can't be deleted yet). */

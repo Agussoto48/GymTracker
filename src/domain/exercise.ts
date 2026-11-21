@@ -136,3 +136,30 @@ export function exerciseDeleteBlocker(
   const only = routines.find((r) => r.exerciseIds.length === 1 && r.exerciseIds[0] === exerciseId)
   return only ? { reason: 'only-exercise', routineName: only.name } : null
 }
+
+/** What deleting several exercises at once does: which go, and which stay and why. */
+export type ExerciseDeletionPlan = { deletable: Id[]; skipped: { id: Id; blocker: DeleteBlocker }[] }
+
+/**
+ * Plans deleting several exercises with the same rule as one at a time, in the given order: each
+ * one is checked against the routines as the earlier ones left them. So when every exercise of a
+ * routine is selected, the last one in the order stays (a routine needs one exercise).
+ */
+export function planExerciseDeletion(
+  exerciseIds: readonly Id[],
+  routines: readonly Pick<Routine, 'name' | 'exerciseIds'>[],
+  activeSession: Pick<WorkoutSession, 'exercises'> | null,
+): ExerciseDeletionPlan {
+  let remaining = routines.map((routine) => ({ name: routine.name, exerciseIds: [...routine.exerciseIds] }))
+  const plan: ExerciseDeletionPlan = { deletable: [], skipped: [] }
+  for (const id of new Set(exerciseIds)) {
+    const blocker = exerciseDeleteBlocker(id, remaining, activeSession)
+    if (blocker) {
+      plan.skipped.push({ id, blocker })
+      continue
+    }
+    plan.deletable.push(id)
+    remaining = remaining.map((routine) => ({ ...routine, exerciseIds: routine.exerciseIds.filter((e) => e !== id) }))
+  }
+  return plan
+}
