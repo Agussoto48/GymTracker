@@ -1,0 +1,96 @@
+/*
+ * Glass capsule pinned to the bottom of the workout sheet (sticky inside its scroll area), the same
+ * material as the toast and alerts: it floats above the cards scrolling behind it. Opaque under
+ * Increase Contrast or Reduce Transparency.
+ */
+.bar {
+  position: sticky;
+  /* Sticky offsets count from inside the sheet's bottom padding (≥ the home indicator), so 0 keeps
+     it at that same height while scrolling and at the end. */
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+  margin-top: auto;
+  /* 8 px around the 44 px buttons; the capsule radius stays concentric with theirs. */
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+  border: 1px solid var(--glass-edge);
+  border-radius: calc(var(--tap) / 2 + var(--space-2));
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.18);
+}
+
+@media (prefers-contrast: more), (prefers-reduced-transparency: reduce) {
+  .bar {
+    border-color: var(--separator);
+    background: var(--glass-opaque);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+.time {
+  font-size: var(--text-title);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+/* Hundredths a step smaller and quieter: they change every frame, the seconds are what you read. */
+.hundredths {
+  color: var(--label-2);
+  font-size: var(--text-headline);
+}
+
+.controls {
+  display: flex;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-height: var(--tap);
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: calc(var(--tap) / 2);
+  background: var(--surface-2);
+  color: var(--label);
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* Same width for «Iniciar» and «Detener», so «Reiniciar» never shifts under the thumb. */
+.main {
+  min-width: 6.25em;
+}
+
+/* Green to start (or resume), red to stop, like the Clock app: colored text on a soft tint of
+   the same color, never a saturated fill (the orange «Repetir» stays the one filled button). */
+.start {
+  background: color-mix(in srgb, var(--go) 16%, transparent);
+  color: var(--go);
+}
+
+.stop {
+  background: color-mix(in srgb, var(--stop) 16%, transparent);
+  color: var(--stop);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  color: var(--label-3);
+}
+
+.button:not(:disabled):active {
+  filter: brightness(0.92);
+}

@@ -45,4 +45,12 @@
 
 .discard {
   margin-top: var(--space-8);
+  margin-bottom: var(--space-6);
+}
+
+/* Column as tall as the scroll area: the stopwatch's auto top margin pushes it to the bottom. */
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
 }

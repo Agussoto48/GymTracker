@@ -10,6 +10,7 @@ import { RowButton } from '../../../shared/ui/RowButton.tsx'
 import { Section } from '../../../shared/ui/Section.tsx'
 import { Sheet } from '../../../shared/ui/Sheet.tsx'
 import { ExerciseCard } from './ExerciseCard.tsx'
+import { StopwatchBar } from './StopwatchBar.tsx'
 import styles from './WorkoutSheet.module.css'
 
 type WorkoutSheetProps = {
@@ -99,33 +100,39 @@ export function WorkoutSheet({ session, exercises, routineName, onHide, onFinish
         </button>
       }
     >
-      <p className={`${styles.status} figures`}>
-        Iniciado {formatTime(session.startedAt)} · {minutesBetween(session.startedAt, now)} min · {totalSets}{' '}
-        {totalSets === 1 ? 'serie' : 'series'}
-      </p>
+      {/* Fills the sheet so the stopwatch sits at the bottom even with few cards. */}
+      <div className={styles.layout}>
+        <p className={`${styles.status} figures`}>
+          Iniciado {formatTime(session.startedAt)} · {minutesBetween(session.startedAt, now)} min · {totalSets}{' '}
+          {totalSets === 1 ? 'serie' : 'series'}
+        </p>
 
-      <div className={styles.exercises}>{pending.map(card)}</div>
+        <div className={styles.exercises}>{pending.map(card)}</div>
 
-      {session.exercises.length === 0 && (
-        <p className={styles.hint}>Agrega el primer ejercicio para empezar a anotar series.</p>
-      )}
+        {session.exercises.length === 0 && (
+          <p className={styles.hint}>Agrega el primer ejercicio para empezar a anotar series.</p>
+        )}
 
-      <button type="button" className={styles.add} onClick={() => setPicking(true)}>
-        + Agregar ejercicio
-      </button>
+        <button type="button" className={styles.add} onClick={() => setPicking(true)}>
+          + Agregar ejercicio
+        </button>
 
-      {/* Done for today: out of the way at the end, still open to view or add a set. */}
-      {finished.length > 0 && (
-        <div className={styles.finished}>
-          <Section title="Finalizados">
-            <div className={styles.exercises}>{finished.map(card)}</div>
-          </Section>
-        </div>
-      )}
+        {/* Done for today: out of the way at the end, still open to view or add a set. */}
+        {finished.length > 0 && (
+          <div className={styles.finished}>
+            <Section title="Finalizados">
+              <div className={styles.exercises}>{finished.map(card)}</div>
+            </Section>
+          </div>
+        )}
 
-      <RowButton tone="destructive" className={styles.discard} onClick={() => void discard()}>
-        Descartar entrenamiento
-      </RowButton>
+        <RowButton tone="destructive" className={styles.discard} onClick={() => void discard()}>
+          Descartar entrenamiento
+        </RowButton>
+
+        {/* Last in the scroll area and sticky: pinned at the bottom while the cards scroll behind it. */}
+        <StopwatchBar key={session.id} sessionId={session.id} />
+      </div>
 
       {picking && (
         <ExercisePicker
